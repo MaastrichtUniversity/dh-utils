@@ -1,8 +1,13 @@
 #!/bin/bash
 
+#Enter the xml tag that needs to be updated
+inputXMLTag="test"
+#Enter the xml tag that the output should contain
+outputXMLTag="updatedTest"
+
+
 ##Initial listing for projects
 array=( $(ils /nlmumc/projects | awk '{print $2}'))
-
 #parse projects
 for i in "${array[@]}"
 do
@@ -32,7 +37,7 @@ do
                                 iget $path/$k $backup/$k
                                 echo "parsing $backup/$k"
                                 #parse  xml in python and change xml tag
-                                python parseMetadataXml.py $backup/$k $backup/$k\_orig tissue test
+                                python parseMetadataXml.py $backup/$k $backup/$k\_orig "$inputXMLTag" "$outputXMLTag"
                                 echo "updating irods"
                                 #open irods collection for writing
                                 echo "irule -F $rulespath/projects/openProjectCollection.r\" \"*project='$project'\" \"*projectCollection='$collection'\""
