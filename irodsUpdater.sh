@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #Enter the xml tag that needs to be updated
-inputXMLTag="test"
+inputXMLTag="organ"
 #Enter the xml tag that the output should contain
-outputXMLTag="updatedTest"
+outputXMLTag="tissue"
 
 
 ##Initial listing for projects
