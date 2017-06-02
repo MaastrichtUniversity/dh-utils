@@ -1,0 +1,29 @@
+# Adding new migrations
+
+* Create new directory in `migrations/` with the version to migrate to
+* Add script migrate.py with all changes to metadata.xml
+* Change version in localTesting.sh and irodsUpdater.sh to new version
+
+# Local testing of migrations
+
+* Create new directory in testing with version to migrate to
+* Add *.xml files tot test on to this directory
+* Run `./diff.sh -p | colordiff` to review changes
+
+# Dry run of migrations on iRODs
+
+* Get a working rodsadmin connection through iinit to iRODS server of choice
+* Run `./irodsUpdater.sh` to execute updater
+* Run `./diff.sh -p | colordiff` to review changes
+
+# Commit changes
+
+* Get a working rodsadmin connection through iinit to iRODS server of choice
+* Run `./irodsUpdater.sh --commit` to execute updater in commit mode
+* Run `./diff.sh -p | colordiff` to review changes
+
+# TODO
+
+* TODO: Ability to continue from a previous run, or to skip broken files
+* TODO: Ability to run validation XSD on results
+* TODO: We should place metadata.xml version information somewhere, as iRODS metadata or in the XML itself
