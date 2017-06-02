@@ -1,4 +1,4 @@
-import xml.etree.ElementTree as ET
+from xml.etree import ElementTree as ET
 import sys
 
 # Commandline arguments
@@ -21,5 +21,15 @@ root = tree.getroot()
 for element in root.iter(originalNodeName):
     element.tag = newNodeName
 
+# Remove all articles
+for element in root.iter("article"):
+    root.remove(element)
+
+# Append dummy article with reference
+ref = ET.Element("article")
+ref.text = "http://dx.doi.org/10.1353/lib.0.0036"
+root.append( ref )
+
 # Write output
-tree.write(outputFilename)
+tree.write(outputFilename, encoding='utf-8', xml_declaration=True)
+
