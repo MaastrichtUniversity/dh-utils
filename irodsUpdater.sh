@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # This specifies the version of the migrate script to be executed
 version=2.0.0
