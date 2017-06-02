@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# Enter the xml tag that needs to be updated
-inputXMLTag="organ"
-# Enter the xml tag that the output should contain
-outputXMLTag="tissue"
+# This specifies the version of the migrate script to be executed
+version=2.0.0
 
+# Base path in iRODS
 base=/nlmumc/projects
 
 # Listing for projects
@@ -24,12 +23,12 @@ do
         p=$project/$collection
 
         # create backup path on local disk
-        mkdir -p $p
+        mkdir -p processing/$p
 
         # TODO: We should place metadata.xml version information somewhere, as iRODS metadata or in the XML itself
 
         # download metadata.xml from irods
-        iget -f $base/$p/metadata.xml $p/metadata.xml > /dev/null 2>&1
+        iget -f $base/$p/metadata.xml processing/$p/metadata.xml > /dev/null 2>&1
 
         rc=$?
         if [[ $rc != 0 ]]; then
@@ -43,13 +42,13 @@ do
         set -e
 
         # parse xml in python and change xml tag
-        python parseMetadataXml.py $p/metadata.xml $p/metadata.orig.xml "$inputXMLTag" "$outputXMLTag"
+        python migrations/$version/migrate.py processing/$p/metadata.xml processing/$p/metadata.new.xml
 
         # Open project collection for writing
         irule "openProjectCollection('$project', '$collection')" null null
 
         # Update file in irods
-        iput -f $p/metadata.xml $base/$p/metadata.xml
+        iput -f processing/$p/metadata.new.xml $base/$p/metadata.xml
 
         # Close project collection for writing
         irule "closeProjectCollection('$project', '$collection')" null null
