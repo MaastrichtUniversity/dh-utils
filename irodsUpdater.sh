@@ -39,19 +39,20 @@ do
         if [[ -e migrations/$version/metadata_xml_migrate.py ]]; then
 
             # download metadata.xml from irods
-            # || true is to ignore errors from this command
-            iget -f $base/$p/metadata.xml processing/$p/metadata.xml || true > /dev/null 2>&1
-
+            set +e
+            iget -f $base/$p/metadata.xml processing/$p/metadata.xml > /dev/null 2>&1
             rc=$?
+            set -e
+
             if [[ $rc != 0 ]]; then
                 echo "Warning, could not retrieve $p/metadata.xml"
-            fi
+            else
+                python migrations/$version/metadata_xml_migrate.py processing/$p/metadata.xml processing/$p/metadata.new.xml
 
-            python migrations/$version/metadata_xml_migrate.py processing/$p/metadata.xml processing/$p/metadata.new.xml
-
-            # Only put results back when --commit is the argument
-            if [[ $1 == "--commit" ]]; then
-                iput -f processing/$p/metadata.new.xml $base/$p/metadata.xml
+                # Only put results back when --commit is the argument
+                if [[ $1 == "--commit" ]]; then
+                    iput -f processing/$p/metadata.new.xml $base/$p/metadata.xml
+                fi
             fi
         fi
 
@@ -59,9 +60,9 @@ do
         if [[ -e migrations/$version/avu_migrate.py ]]; then
             # Only put results back when --commit is the argument
             if [[ $1 == "--commit" ]]; then
-                python migrations/$version/avu_migrate.py --commit $p
+                bash migrations/$version/avu_migrate.sh $p --commit
             else
-                python migrations/$version/avu_migrate.py $p
+                bash migrations/$version/avu_migrate.sh $p
             fi
         fi
 
