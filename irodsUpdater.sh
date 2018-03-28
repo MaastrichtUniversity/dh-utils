@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # This specifies the version of the migrate script to be executed
-version=2.0.0
+version=2.1.2
 
 # Base path in iRODS
 base=/nlmumc/projects
@@ -57,7 +57,7 @@ do
         fi
 
         # If required, update AVU's
-        if [[ -e migrations/$version/avu_migrate.py ]]; then
+        if [[ -e migrations/$version/avu_migrate.sh ]]; then
             # Only put results back when --commit is the argument
             if [[ $1 == "--commit" ]]; then
                 bash migrations/$version/avu_migrate.sh $p --commit
