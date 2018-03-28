@@ -6,6 +6,9 @@ version=2.0.0
 # Base path in iRODS
 base=/nlmumc/projects
 
+# Fail on error
+set -e
+
 # Listing for projects
 projects=( $(ils $base | awk '{print $2}'))
 for i in "${projects[@]}"
@@ -25,37 +28,47 @@ do
         # create backup path on local disk
         mkdir -p processing/$p
 
-        # download metadata.xml from irods
-        iget -f $base/$p/metadata.xml processing/$p/metadata.xml > /dev/null 2>&1
+        echo "Updating $p"
 
-        rc=$?
-        if [[ $rc != 0 ]]; then
-            echo "Warning, could not retrieve $p/metadata.xml"
-            continue
-        fi
-
-        echo "Updating $p/metadata.xml"
-
-        # Break on any error from here on
-        set -e
-
-        # parse xml in python and change xml tag
-        python migrations/$version/migrate.py processing/$p/metadata.xml processing/$p/metadata.new.xml
-
-        # Only put results back when --commit is the argument
         if [[ $1 == "--commit" ]]; then
             # Open project collection for writing
             irule "openProjectCollection('$project', '$collection')" null null
+        fi
 
-            # Update file in irods
-            iput -f processing/$p/metadata.new.xml $base/$p/metadata.xml
+        # If required, parse and update metadata_xml
+        if [[ -e migrations/$version/metadata_xml_migrate.py ]]; then
 
+            # download metadata.xml from irods
+            # || true is to ignore errors from this command
+            iget -f $base/$p/metadata.xml processing/$p/metadata.xml || true > /dev/null 2>&1
+
+            rc=$?
+            if [[ $rc != 0 ]]; then
+                echo "Warning, could not retrieve $p/metadata.xml"
+            fi
+
+            python migrations/$version/metadata_xml_migrate.py processing/$p/metadata.xml processing/$p/metadata.new.xml
+
+            # Only put results back when --commit is the argument
+            if [[ $1 == "--commit" ]]; then
+                iput -f processing/$p/metadata.new.xml $base/$p/metadata.xml
+            fi
+        fi
+
+        # If required, update AVU's
+        if [[ -e migrations/$version/avu_migrate.py ]]; then
+            # Only put results back when --commit is the argument
+            if [[ $1 == "--commit" ]]; then
+                python migrations/$version/avu_migrate.py --commit $p
+            else
+                python migrations/$version/avu_migrate.py $p
+            fi
+        fi
+
+        if [[ $1 == "--commit" ]]; then
             # Close project collection for writing
             irule "closeProjectCollection('$project', '$collection')" null null
         fi;
-
-        # Stop breaking on any error from here on
-        set +e
     done
 done
 

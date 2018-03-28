@@ -4,7 +4,7 @@ import sys
 # Commandline arguments
 # input filename
 # output filename
-# example: migrate.py metadata.xml metadata.new.xml
+# example: metadata_xml_migrate.py metadata.xml metadata.new.xml
 
 
 # Pretty print function for indentation

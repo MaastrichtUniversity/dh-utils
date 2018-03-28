@@ -15,5 +15,5 @@ files=( $(ls testing/$version/*.xml))
 for i in "${files[@]}"
 do
     file=$(basename "$i")
-    python migrations/$version/migrate.py testing/$version/$file testing/$version/output/$file
+    python migrations/$version/metadata_xml_migrate.py testing/$version/$file testing/$version/output/$file
 done
