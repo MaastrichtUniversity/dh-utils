@@ -1,7 +1,8 @@
 # Adding new migrations
 
 * Create new directory in `migrations/` with the version to migrate to
-* Add script migrate.py with all changes to metadata.xml
+* Add script metadata_xml_migrate.py with all changes to metadata.xml
+* Add script avu_migrate.py with all changes to AVU's
 * Change version in localTesting.sh and irodsUpdater.sh to new version
 
 # Local testing of migrations
