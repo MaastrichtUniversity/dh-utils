@@ -32,7 +32,7 @@ do
 
         if [[ $1 == "--commit" ]]; then
             # Open project collection for writing
-            irule "openProjectCollection('$project', '$collection')" null null
+            irule "openProjectCollection('$project', '$collection' ,'rods', 'own' )" null null
         fi
 
         # If required, parse and update metadata_xml
