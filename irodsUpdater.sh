@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # This specifies the version of the migrate script to be executed
-version=2.1.2
+version=2.1.3
 
 # Base path in iRODS
 base=/nlmumc/projects
@@ -63,6 +63,16 @@ do
                 bash migrations/$version/avu_migrate.sh $p --commit
             else
                 bash migrations/$version/avu_migrate.sh $p
+            fi
+        fi
+
+        # If required, update PID
+        if [[ -e migrations/$version/new_pid.sh ]]; then
+            # Only put results back when --commit is the argument
+            if [[ $1 == "--commit" ]]; then
+                bash migrations/$version/new_pid.sh $project $collection --commit
+            else
+                bash migrations/$version/new_pid.sh $project $collection
             fi
         fi
 
