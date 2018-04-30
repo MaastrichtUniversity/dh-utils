@@ -1,0 +1,449 @@
+<channel version="3.5.0">
+  <id>409c98be-3d7d-4254-af07-31a79638ad1b</id>
+  <nextMetaDataId>2</nextMetaDataId>
+  <name>SERVICE_PID_createEpicPID</name>
+  <description></description>
+  <revision>1</revision>
+  <sourceConnector version="3.5.0">
+    <metaDataId>0</metaDataId>
+    <name>sourceConnector</name>
+    <properties class="com.mirth.connect.connectors.vm.VmReceiverProperties" version="3.5.0">
+      <pluginProperties/>
+      <sourceConnectorProperties version="3.5.0">
+        <responseVariable>Postprocessor</responseVariable>
+        <respondAfterProcessing>true</respondAfterProcessing>
+        <processBatch>false</processBatch>
+        <firstResponse>false</firstResponse>
+        <processingThreads>1</processingThreads>
+        <resourceIds class="linked-hash-map">
+          <entry>
+            <string>Default Resource</string>
+            <string>[Default Resource]</string>
+          </entry>
+        </resourceIds>
+        <queueBufferSize>1000</queueBufferSize>
+      </sourceConnectorProperties>
+    </properties>
+    <transformer version="3.5.0">
+      <elements>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>url</name>
+          <sequenceNumber>0</sequenceNumber>
+          <variable>url</variable>
+          <mapping>msg[&apos;row&apos;][&apos;column2&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+        <com.mirth.connect.plugins.mapper.MapperStep>
+          <name>id</name>
+          <sequenceNumber>1</sequenceNumber>
+          <variable>id</variable>
+          <mapping>msg[&apos;row&apos;][&apos;column1&apos;].toString()</mapping>
+          <defaultValue></defaultValue>
+          <replacements/>
+          <scope>CHANNEL</scope>
+        </com.mirth.connect.plugins.mapper.MapperStep>
+      </elements>
+      <inboundTemplate encoding="base64"></inboundTemplate>
+      <outboundTemplate encoding="base64"></outboundTemplate>
+      <inboundDataType>DELIMITED</inboundDataType>
+      <outboundDataType>RAW</outboundDataType>
+      <inboundProperties class="com.mirth.connect.plugins.datatypes.delimited.DelimitedDataTypeProperties" version="3.5.0">
+        <serializationProperties class="com.mirth.connect.plugins.datatypes.delimited.DelimitedSerializationProperties" version="3.5.0">
+          <columnDelimiter>,</columnDelimiter>
+          <recordDelimiter>\n</recordDelimiter>
+          <quoteToken>&quot;</quoteToken>
+          <escapeWithDoubleQuote>true</escapeWithDoubleQuote>
+          <quoteEscapeToken>\</quoteEscapeToken>
+          <numberedRows>false</numberedRows>
+          <ignoreCR>true</ignoreCR>
+        </serializationProperties>
+        <deserializationProperties class="com.mirth.connect.plugins.datatypes.delimited.DelimitedDeserializationProperties" version="3.5.0">
+          <columnDelimiter>,</columnDelimiter>
+          <recordDelimiter>\n</recordDelimiter>
+          <quoteToken>&quot;</quoteToken>
+          <escapeWithDoubleQuote>true</escapeWithDoubleQuote>
+          <quoteEscapeToken>\</quoteEscapeToken>
+        </deserializationProperties>
+        <batchProperties class="com.mirth.connect.plugins.datatypes.delimited.DelimitedBatchProperties" version="3.5.0">
+          <splitType>Record</splitType>
+          <batchSkipRecords>0</batchSkipRecords>
+          <batchMessageDelimiter></batchMessageDelimiter>
+          <batchMessageDelimiterIncluded>false</batchMessageDelimiterIncluded>
+          <batchGroupingColumn></batchGroupingColumn>
+          <batchScript></batchScript>
+        </batchProperties>
+      </inboundProperties>
+      <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.0">
+        <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.0">
+          <splitType>JavaScript</splitType>
+          <batchScript></batchScript>
+        </batchProperties>
+      </outboundProperties>
+    </transformer>
+    <filter version="3.5.0">
+      <elements/>
+    </filter>
+    <transportName>Channel Reader</transportName>
+    <mode>SOURCE</mode>
+    <enabled>true</enabled>
+    <waitForPrevious>true</waitForPrevious>
+  </sourceConnector>
+  <destinationConnectors>
+    <connector version="3.5.0">
+      <metaDataId>1</metaDataId>
+      <name>callEPICWebService</name>
+      <properties class="com.mirth.connect.connectors.http.HttpDispatcherProperties" version="3.5.0">
+        <pluginProperties/>
+        <destinationConnectorProperties version="3.5.0">
+          <queueEnabled>false</queueEnabled>
+          <sendFirst>false</sendFirst>
+          <retryIntervalMillis>10000</retryIntervalMillis>
+          <regenerateTemplate>false</regenerateTemplate>
+          <retryCount>0</retryCount>
+          <rotate>false</rotate>
+          <includeFilterTransformer>false</includeFilterTransformer>
+          <threadCount>1</threadCount>
+          <threadAssignmentVariable></threadAssignmentVariable>
+          <validateResponse>false</validateResponse>
+          <resourceIds class="linked-hash-map">
+            <entry>
+              <string>Default Resource</string>
+              <string>[Default Resource]</string>
+            </entry>
+          </resourceIds>
+          <queueBufferSize>1000</queueBufferSize>
+          <reattachAttachments>true</reattachAttachments>
+        </destinationConnectorProperties>
+        <host>${cfg_EpicURL}/${id}</host>
+        <useProxyServer>false</useProxyServer>
+        <proxyAddress></proxyAddress>
+        <proxyPort></proxyPort>
+        <method>put</method>
+        <headers class="linked-hash-map">
+          <entry>
+            <string>Content-Type</string>
+            <list>
+              <string>application/json</string>
+            </list>
+          </entry>
+          <entry>
+            <string>Authorization</string>
+            <list>
+              <string>Handle clientCert=&quot;true&quot;</string>
+            </list>
+          </entry>
+        </headers>
+        <parameters class="linked-hash-map"/>
+        <responseXmlBody>false</responseXmlBody>
+        <responseParseMultipart>true</responseParseMultipart>
+        <responseIncludeMetadata>false</responseIncludeMetadata>
+        <responseBinaryMimeTypes>application/.*(?&lt;!json|xml)$|image/.*|video/.*|audio/.*</responseBinaryMimeTypes>
+        <responseBinaryMimeTypesRegex>true</responseBinaryMimeTypesRegex>
+        <multipart>false</multipart>
+        <useAuthentication>false</useAuthentication>
+        <authenticationType>Basic</authenticationType>
+        <usePreemptiveAuthentication>false</usePreemptiveAuthentication>
+        <username></username>
+        <password></password>
+        <content>{&quot;values&quot;: [
+            {&quot;index&quot;:1,&quot;type&quot;:&quot;URL&quot;,
+                &quot;data&quot;: {&quot;format&quot;: &quot;string&quot;,
+                &quot;value&quot;:&quot;${url}&quot;}},
+            { &quot;index&quot;: 100,&quot;type&quot;: &quot;HS_ADMIN&quot;,
+                &quot;data&quot;: {&quot;format&quot;: &quot;admin&quot;,
+                &quot;value&quot;: {&quot;handle&quot;: &quot;0.NA/${cfg_EpicPrefix}&quot;,&quot;index&quot;: 200,&quot;permissions&quot;: &quot;011111110011&quot;}}}
+        ]}</content>
+        <contentType>application/json</contentType>
+        <dataTypeBinary>false</dataTypeBinary>
+        <charset>UTF-8</charset>
+        <socketTimeout>30000</socketTimeout>
+      </properties>
+      <transformer version="3.5.0">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>RAW</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.0">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.0">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </transformer>
+      <responseTransformer version="3.5.0">
+        <elements/>
+        <inboundTemplate encoding="base64"></inboundTemplate>
+        <outboundTemplate encoding="base64"></outboundTemplate>
+        <inboundDataType>JSON</inboundDataType>
+        <outboundDataType>RAW</outboundDataType>
+        <inboundProperties class="com.mirth.connect.plugins.datatypes.json.JSONDataTypeProperties" version="3.5.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.json.JSONBatchProperties" version="3.5.0">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </inboundProperties>
+        <outboundProperties class="com.mirth.connect.plugins.datatypes.raw.RawDataTypeProperties" version="3.5.0">
+          <batchProperties class="com.mirth.connect.plugins.datatypes.raw.RawBatchProperties" version="3.5.0">
+            <splitType>JavaScript</splitType>
+            <batchScript></batchScript>
+          </batchProperties>
+        </outboundProperties>
+      </responseTransformer>
+      <filter version="3.5.0">
+        <elements>
+          <com.mirth.connect.plugins.rulebuilder.RuleBuilderRule>
+            <name>Accept message if &quot;$(&apos;url&apos;)&quot; is not blank</name>
+            <sequenceNumber>0</sequenceNumber>
+            <operator>NONE</operator>
+            <field>$(&apos;url&apos;)</field>
+            <condition>NOT_EQUAL</condition>
+            <values/>
+          </com.mirth.connect.plugins.rulebuilder.RuleBuilderRule>
+          <com.mirth.connect.plugins.rulebuilder.RuleBuilderRule>
+            <name>Accept message if &quot;$(&apos;url&apos;)&quot; exists</name>
+            <sequenceNumber>1</sequenceNumber>
+            <operator>OR</operator>
+            <field>$(&apos;url&apos;)</field>
+            <condition>EXISTS</condition>
+            <values/>
+          </com.mirth.connect.plugins.rulebuilder.RuleBuilderRule>
+        </elements>
+      </filter>
+      <transportName>HTTP Sender</transportName>
+      <mode>DESTINATION</mode>
+      <enabled>true</enabled>
+      <waitForPrevious>true</waitForPrevious>
+    </connector>
+  </destinationConnectors>
+  <preprocessingScript>// Modify the message variable below to pre process data
+return message;</preprocessingScript>
+  <postprocessingScript>// This script executes once after a message has been processed
+// Responses returned from here will be stored as &quot;Postprocessor&quot; in the response map
+if(responseMap.get(&apos;d1&apos;).getStatus() == ERROR) {
+	return new Response(ERROR,&apos;ERROR with registering PID. Error message is: &apos; + responseMap.get(&apos;d1&apos;).getStatusMessage());
+} else {
+	var objJson = JSON.parse(responseMap.get(&apos;d1&apos;).getMessage());
+	var pid = objJson[&apos;handle&apos;];
+	
+	return new Response(SENT,pid);	
+}
+</postprocessingScript>
+  <deployScript>// This script executes once when the channel is deployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</deployScript>
+  <undeployScript>// This script executes once when the channel is undeployed
+// You only have access to the globalMap and globalChannelMap here to persist data
+return;</undeployScript>
+  <properties version="3.5.0">
+    <clearGlobalChannelMap>true</clearGlobalChannelMap>
+    <messageStorageMode>DEVELOPMENT</messageStorageMode>
+    <encryptData>false</encryptData>
+    <removeContentOnCompletion>false</removeContentOnCompletion>
+    <removeOnlyFilteredOnCompletion>false</removeOnlyFilteredOnCompletion>
+    <removeAttachmentsOnCompletion>false</removeAttachmentsOnCompletion>
+    <initialState>STARTED</initialState>
+    <storeAttachments>false</storeAttachments>
+    <metaDataColumns>
+      <metaDataColumn>
+        <name>SOURCE</name>
+        <type>STRING</type>
+        <mappingName>mirth_source</mappingName>
+      </metaDataColumn>
+      <metaDataColumn>
+        <name>TYPE</name>
+        <type>STRING</type>
+        <mappingName>mirth_type</mappingName>
+      </metaDataColumn>
+    </metaDataColumns>
+    <attachmentProperties version="3.5.0">
+      <type>None</type>
+      <properties/>
+    </attachmentProperties>
+    <resourceIds class="linked-hash-map">
+      <entry>
+        <string>Default Resource</string>
+        <string>[Default Resource]</string>
+      </entry>
+    </resourceIds>
+  </properties>
+  <exportData>
+    <metadata>
+      <enabled>true</enabled>
+      <lastModified>
+        <time>1524744733193</time>
+        <timezone>Europe/Berlin</timezone>
+      </lastModified>
+      <pruningSettings>
+        <archiveEnabled>true</archiveEnabled>
+      </pruningSettings>
+    </metadata>
+    <codeTemplateLibraries>
+      <codeTemplateLibrary version="3.5.0">
+        <id>c579ff86-cf20-4f94-ac9f-d77fc972bc86</id>
+        <name>lib_CustomFunctions</name>
+        <revision>1</revision>
+        <lastModified>
+          <time>1524744387828</time>
+          <timezone>Etc/UTC</timezone>
+        </lastModified>
+        <description>Custom function</description>
+        <includeNewChannels>true</includeNewChannels>
+        <enabledChannelIds>
+          <string>ea9fbf80-8809-4ba1-84d8-082212f9171e</string>
+          <string>fe85d8bc-08b4-4148-ace5-6fd8ac043b90</string>
+          <string>815733eb-9009-43eb-96f0-99493abc75bd</string>
+          <string>0772077f-f0c1-4568-97cb-f9a13bab3dbb</string>
+          <string>b23b423a-740c-4078-a707-10060162e2c6</string>
+          <string>922d12b2-3e6b-47e2-94f5-7598797d0fc4</string>
+        </enabledChannelIds>
+        <disabledChannelIds/>
+        <codeTemplates>
+          <codeTemplate version="3.5.0">
+            <id>a2014229-c34a-43ef-b887-8fc87fba188e</id>
+            <name>getDestErrorLogs Postprocessor</name>
+            <revision>2</revision>
+            <lastModified>
+              <time>1524230125534</time>
+              <timezone>Etc/UTC</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>CHANNEL_POSTPROCESSOR</contextType>
+                <contextType>GLOBAL_POSTPROCESSOR</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>/**
+	Modify the description here. Modify the function name and parameters as needed. One function per
+	template is recommended; create a new code template for each new function.
+
+	@param {String} arg1 - arg1 description
+	@return {String} return description
+*/
+function getDestErrorLogs(channelId, message, responseMap) {
+	var channelName = Packages.com.mirth.connect.server.userutil.ChannelUtil.getDeployedChannelName(channelId);
+
+	var destMap = message.getDestinationIdMap()
+
+	var responseMapKeys = responseMap.keySet();
+
+	for each(var k in responseMapKeys.toArray()){
+		var destName = k;
+		var status   = responseMap.get(destName).getStatus().toString() + &quot;&quot;;
+		var errormsg = responseMap.get(destName)
+		if ((status == &quot;ERROR&quot; || status == &quot;FAILURE&quot;) ) {
+			 logger.error(&apos;[&apos; + channelName + &apos;] [&apos; + destName + &quot;: &quot; + getDestNameFromID (destName,destMap) + &quot;] [&quot; + errormsg+&quot;]&quot;);
+		}
+	}
+
+
+	function getDestNameFromID (id,destMap){
+		id = id.substring(1)
+		for each(var k in destMap.keySet().toArray()){
+			if (destMap.get(k) == id){
+				return k
+			}
+		}
+	}	
+}</code>
+            </properties>
+          </codeTemplate>
+          <codeTemplate version="3.5.0">
+            <id>1d1e4fbe-dc23-4ab5-a482-ae9f9bf345a5</id>
+            <name>htmlEntityDecode</name>
+            <revision>1</revision>
+            <lastModified>
+              <time>1520842683466</time>
+              <timezone>Etc/UTC</timezone>
+            </lastModified>
+            <contextSet>
+              <delegate>
+                <contextType>DESTINATION_FILTER_TRANSFORMER</contextType>
+                <contextType>DESTINATION_DISPATCHER</contextType>
+                <contextType>SOURCE_FILTER_TRANSFORMER</contextType>
+                <contextType>CHANNEL_ATTACHMENT</contextType>
+                <contextType>CHANNEL_PREPROCESSOR</contextType>
+                <contextType>SOURCE_RECEIVER</contextType>
+                <contextType>CHANNEL_POSTPROCESSOR</contextType>
+                <contextType>GLOBAL_POSTPROCESSOR</contextType>
+                <contextType>DESTINATION_RESPONSE_TRANSFORMER</contextType>
+                <contextType>GLOBAL_DEPLOY</contextType>
+                <contextType>CHANNEL_DEPLOY</contextType>
+                <contextType>GLOBAL_UNDEPLOY</contextType>
+                <contextType>CHANNEL_UNDEPLOY</contextType>
+                <contextType>GLOBAL_PREPROCESSOR</contextType>
+                <contextType>CHANNEL_BATCH</contextType>
+              </delegate>
+            </contextSet>
+            <properties class="com.mirth.connect.model.codetemplates.BasicCodeTemplateProperties">
+              <type>FUNCTION</type>
+              <code>function htmlEntityDecode(string) {
+        string = string.replace(/\&amp;amp;#/mg, &apos;&amp;#&apos;);
+        string = string.replace(/\&amp;quot;/mg, &apos;&quot;&apos;);
+        string = string.replace(/\&amp;quote;/mg, &apos;&quot;&apos;);
+        string = string.replace(/\&amp;#95;/mg, &apos;_&apos;);
+        string = string.replace(/\&amp;#39;/mg, &quot;&apos;&quot;);
+        string = string.replace(/\&amp;#34;/mg, &apos;&quot;&apos;);
+        string = string.replace(/\&amp;#62;/mg, &apos;&gt;&apos;);
+        string = string.replace(/\&amp;#60;/mg, &apos;&lt;&apos;);
+        return string
+
+}</code>
+            </properties>
+          </codeTemplate>
+        </codeTemplates>
+      </codeTemplateLibrary>
+    </codeTemplateLibraries>
+    <channelTags>
+      <channelTag>
+        <id>64ec49be-ccb4-4d82-b5bd-84215d2a171e</id>
+        <name>pid</name>
+        <channelIds>
+          <string>e559c13f-7f2d-40ba-a715-45e5ba0b02f8</string>
+          <string>d5c2cf27-6847-4d87-aa36-ec5285f14889</string>
+          <string>409c98be-3d7d-4254-af07-31a79638ad1b</string>
+        </channelIds>
+        <backgroundColor>
+          <red>128</red>
+          <green>0</green>
+          <blue>0</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+      <channelTag>
+        <id>a8936250-44c7-4d54-b1a6-70b53a062d97</id>
+        <name>service</name>
+        <channelIds>
+          <string>16f48254-8437-4048-843b-ca89317eb80b</string>
+          <string>ea9fbf80-8809-4ba1-84d8-082212f9171e</string>
+          <string>e559c13f-7f2d-40ba-a715-45e5ba0b02f8</string>
+          <string>868a09ae-c907-4391-b1ab-a19bdb985c97</string>
+          <string>d5c2cf27-6847-4d87-aa36-ec5285f14889</string>
+          <string>922d12b2-3e6b-47e2-94f5-7598797d0fc4</string>
+          <string>409c98be-3d7d-4254-af07-31a79638ad1b</string>
+        </channelIds>
+        <backgroundColor>
+          <red>255</red>
+          <green>0</green>
+          <blue>0</blue>
+          <alpha>255</alpha>
+        </backgroundColor>
+      </channelTag>
+    </channelTags>
+  </exportData>
+</channel>

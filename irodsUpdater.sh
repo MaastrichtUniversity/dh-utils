@@ -60,19 +60,9 @@ do
         if [[ -e migrations/$version/avu_migrate.sh ]]; then
             # Only put results back when --commit is the argument
             if [[ $1 == "--commit" ]]; then
-                bash migrations/$version/avu_migrate.sh $p --commit
+                bash migrations/$version/avu_migrate.sh $project $collection --commit
             else
-                bash migrations/$version/avu_migrate.sh $p
-            fi
-        fi
-
-        # If required, update PID
-        if [[ -e migrations/$version/new_pid.sh ]]; then
-            # Only put results back when --commit is the argument
-            if [[ $1 == "--commit" ]]; then
-                bash migrations/$version/new_pid.sh $project $collection --commit
-            else
-                bash migrations/$version/new_pid.sh $project $collection
+                bash migrations/$version/avu_migrate.sh $project $collection
             fi
         fi
 
