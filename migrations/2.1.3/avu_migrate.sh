@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Fail on errors
+set -e
+
 project="$1"
 collection="$2"
 projectcollection="$1$2"
