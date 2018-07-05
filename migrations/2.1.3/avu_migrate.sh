@@ -7,10 +7,10 @@ collection="$2"
 projectcollection="$1$2"
 
 # TODO: Change this var for acceptance and production!
-env="local"
+env="prod"
 
-baseURL="http://pacman.${env}.rit.unimaas.nl/hdl"
-mirthURL="http://mirthconnect.${env}.rit.unimaas.nl:6681"
+baseURL="http://datahub.mumc.maastrichtuniversity.nl/hdl"
+mirthURL="http://mirthconnect.${env}.rit.unimaas.nl:6667"
 
 URL="$baseURL/$1/$2"
 path="/nlmumc/projects/$project/$collection"
