@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# This script migrates a collection (note that a project is also a collection!)
+# This script migrates all data in a collection (note that a project is also a collection!)
 # from the current resource to another resource using several icommands. This
 # implies that an irods connection is required via iinit.
 # The following steps are performed:
@@ -11,19 +11,19 @@
 #      c - close collection
 #   2 - VERIFY CHECKSUMS (among replicas)
 #      a - iquest to query all checksum that are different
-#      b - if case of results in step 2a, show result and abort script (with error)
+#      b - in case of results in step 2a, show result and abort script (with error)
 #   3 - REPLICATE COLLECTION TO TARGET RESOURCE
 #      a - execute irepl to recursively replicate for all files (and subcollections) (only lowest replica number will be replicated (twice))
 #          now we have 4 replicas (2 on source resource (0,1) and 2 on target resource (2,3)
 #      b - verify count of replicas and checksums on target resource
-#      c - if results found in step 3b, abourt immediately with errror!
+#      c - if results found in step 3b, abort immediately with error!
 #   4 - REMOVE COLLECTION FROM SOURCE RESOURCE
 #      a - execute itrim to recursively remove all files files (and subcollections) from source resource
 #          now we have 2 replicas on the target resource (2,3)
 #      b - ensure no replicas are left on source resource
-#      c - if results found in step 4b, abourt immediately with errror!
+#      c - if results found in step 4b, abort immediately with error!
 #      d - verify count of replicas and checksums on target resource
-#      e - if results found in step 4d, abourt immediately with errror!
+#      e - if results found in step 4d, abort immediately with error!
 #
 #
 
@@ -50,7 +50,7 @@ IRODS_ERROR=99
 
 
 
-### LCOAL VARS ################################################################
+### LOCAL VARS ################################################################
 LOGLEVEL=${WRN}
 DISPLAY_LOGS=0
 CONFIRM=true
@@ -64,7 +64,7 @@ PROJ_NAME=
 COLL_NAME=
 COLL=
 
-### LOCAL FUNCTONS ############################################################
+### LOCAL FUNCTIONS ############################################################
 
 #
 # function: syntax [errormsg] [returnvalue]
@@ -85,7 +85,7 @@ function syntax {
     Options:
         -P --PROJECT=<project>  ; project to be migrated
         -C --COLLECTION=<coll>  ; collection to be migrated
-        -R --RESOURCE=<resc>    ; target resource to migrated to
+        -R --RESOURCE=<resc>    ; target resource to migrate to
         -v --verbose=<DBG|INF|WRN|ERR>
                                 ; define the logging level (default=WRN)
         -d --display-logs       ; display logs on standard output
@@ -128,7 +128,7 @@ function LOG {
         fi
     fi
 
-    # in case of fatal error (returvalue set), write to output and exit
+    # in case of fatal error (returnvalue set), write to output and exit
     if [[ "${LVL}" == "${ERR}" ]];then
         if [ -n "${RET}" ];then
             echo -e "\n${TXT}\n"
@@ -173,12 +173,12 @@ function create_checksums {
 
   # Closing collection (or subcollections)
   LOG $DBG " - closing collection"
-  if [[ -n ${COLL_NAME} ]];then
+  if [[ -n ${COLL_NAME} ]]; then
     if $COMMIT; then
       irule -F /rules/projectCollection/closeProjectCollection.r "*project='${PROJ_NAME}'" "*projectCollection='${COLL_NAME}'"
     fi
   else
-    # open all collections for this project
+    # close all collections for this project
     for SUBCOLL_NAME in $(ils $COLL | grep '  C- ' | sed 's/  C- //g'); do
       SUBCOLL_NAME="${SUBCOLL_NAME##*/}"
       LOG $DBG "   - ${SUBCOLL_NAME}"
@@ -359,7 +359,7 @@ fi
 # check if resource of collection is a replicated compound resource
 REPL_RESC=$(ilsresc | grep ':replication' | sed s/:replication//g | grep "${SRC_RESC}")
 if [[ -z ${REPL_RESC} ]]; then
-    # TODO: Not sure whether we sould abort in this situation...
+    # TODO: Not sure whether we should abort in this situation...
     LOG $WRN "Collection '${COLL}' is not located on a replicated resource!" # ${IRODS_ERROR}
 fi
 
@@ -370,15 +370,17 @@ fi
 #      b - calculate checksum on all files (ichksum)
 #      c - close collection
 #
-if $CONFIRM ; then read -r -n 1 -p "  --> press any key to calculating checksums"; fi
+if $CONFIRM ; then read -r -n 1 -p "  --> press any key to start calculating checksums"; fi
 create_checksums
 
 
 #
 #   2 - VERIFY CHECKSUMS (among replicas)
 #      a - iquest to query all checksum that are different
-#      b - if case of results in step 2a, show result and abort script (with error)
+#      b - in case of results in step 2a, show result and abort script (with error)
 #
+#      info: grep -v inverts the match and returns all NON-matching lines
+
 LOG $DBG "Verifying checksums and number of replicas"
 QUERY="select count(DATA_NAME), DATA_RESC_NAME, DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' and COLL_NAME like '${COLL}%'"
 LOG $DBG "iquest --no-page \"%2d %-14s %-52s %12d %s/%s\" \"${QUERY}\" \| grep -v \"^ 2\""
@@ -397,8 +399,9 @@ fi
 #      c - count number of files on target resource
 #      d - compare number of files on both resources and report error if they are not identical!
 #      e - verify count of replicas and checksums on target resource
-#      f - if results found in step 3b, abourt immediately with errror!
+#      f - if results found in step 3b, abort immediately with error!
 #
+# TODO: Distinguishing between non-zero and empty files not necessary here? Since everything will be replicated (zero and non-zero files). Distinction was only required in verification of checksum between replicas...
 QUERY="select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_NAME = '${SRC_RESC}' AND DATA_SIZE > '0'"
 LOG $DBG "Executing: iquest --no-page \"%d\" \"${QUERY}\""
 SRC_COUNT=$(iquest --no-page "%d" "${QUERY}")
@@ -453,9 +456,9 @@ fi
 #      a - execute itrim to recursively remove all files files (and subcollections) from source resource
 #          now we have 2 replicas on the target resource (2,3)
 #      b - ensure no replicas are left on source resource
-#      c - if results found in step 4b, abourt immediately with errror!
+#      c - if results found in step 4b, abort immediately with error!
 #      d - verify count of replicas and checksums on target resource
-#      e - if results found in step 4d, abourt immediately with errror!
+#      e - if results found in step 4d, abort immediately with error!
 #
 if $CONFIRM ; then read -r -n 1 -p "  --> press any key to start trimming"; fi
 LOG $INF "Removing (trimming) files for ${COLL} from ${SRC_RESC}"
@@ -485,9 +488,9 @@ if $COMMIT; then
   ISSUES=$(iquest --no-page "%2d %-14s %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
 
   if [[ -n "${ISSUES}" ]]; then
-    LOG $ERR "Data objects of collection ${COLL} having not exactly 2 replicas. Details: \n${ISSUES}" ${TRIM_ERROR}
+    LOG $ERR "Found data objects in collection ${COLL} that do not have exactly 2 replicas. Details: \n${ISSUES}" ${TRIM_ERROR}
   fi
-  LOG $DBG "Verification finished"
+  LOG $DBG "Final verification finished"
 
   LOG $INF "Collection ${COLL} has been succesfully migrated from ${SRC_RESC} to ${DST_RESC}\n"
 
