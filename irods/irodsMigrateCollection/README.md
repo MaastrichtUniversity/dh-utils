@@ -46,12 +46,12 @@
 1. **[DRY-RUN]** Test the script and review the output with 
     ```
     cd /home/<username who did step 2>/irodsMigrateCollection_logs
-    /home/<username who did step 2>/dh-utils/irods/irodsMigrateCollection/irodsMigrateCollection.sh -P P000000001 -C C000000001 -R replRescAZM01 -v DBG -d
+    /home/<username who did step 2>/dh-utils/irods/irodsMigrateCollection/irodsMigrateCollection.sh -P P000000001 -C C000000001 -R replRescUM03 -v DBG -d
     ```
 1. **[COMMIT]** Execute the changes with
     ```
     cd /home/<username who did step 2>/irodsMigrateCollection_logs
-    /home/<username who did step 2>/dh-utils/irods/irodsMigrateCollection/irodsMigrateCollection.sh -P P000000001 -C C000000001 -R replRescAZM01 -v DBG -d -y --commit
+    /home/<username who did step 2>/dh-utils/irods/irodsMigrateCollection/irodsMigrateCollection.sh -P P000000001 -C C000000001 -R replRescUM03 -v DBG -d -y --commit
     ```
 
 ## Logfile
