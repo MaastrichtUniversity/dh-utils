@@ -4,7 +4,10 @@
 * **Description**: Migrates a collection from one resource to another including checksum verification
 * **Developer:** Roger Niesten, DataHub Maastricht University
 * **License:** ?
-* **Depends on:** iRODS icommands
+* **Depends on:** 
+  * iRODS icommands
+  * DataHub irods-ruleset
+  * iRODS version 4.1.12 (not compatible with iRODS 4.2.x)
 
 ## Syntax
 
@@ -24,7 +27,9 @@
       -l --logfile=logfile  logfile to write to (overwriting default)
 
 ## Usage
-1. Get a working _rodsadmin_ connection through `iinit` to iRODS server of choice.
+1. Get a working _rodsadmin_ connection through `iinit` from an iRODS server of choice. 
+    1. **NOTE!** that the _openProjectCollection.r_ and _closeProjectCollection.r_ rules need to be present on this 
+    server in _/rules/projectCollection/_
 
 1. **[DRY-RUN]** Test the script and review the output with 
 
