@@ -351,7 +351,10 @@ LOG $INF "========================================"
 if [[ ${RESC_NUM} -gt 1 ]]; then
     # resource is expected to exist on only ONE (compound) resource, if not ABORT
     LOG $ERR "Collection ${COLL} is located on multiple resources (${SRC_RESC}) where only 1 is expected! Please investigate and fix this situation."
-    LOG $ERR "To remove the collection from one of the resources, use the following command \n\n    itrim -r -M -v -S <resource> ${COLL}\n"
+    LOG $ERR "To remove the collection from one of the resources, use the following command \n\n    itrim -r -M -v -S <resource_of_replica_to_be_deleted> ${COLL}\n"
+    if [[ -z ${COLL_NAME} ]]; then
+        LOG $INF "It looks like you tried to migrate an entire project recursively. Multiple resources within a project are likely to occur. Instead of using the itrim command above, try to migrate collections one by one."
+    fi
     LOG $ERR "Script will be aborted!" ${IRODS_ERROR}
 fi
 
