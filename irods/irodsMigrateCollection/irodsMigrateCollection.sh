@@ -408,7 +408,7 @@ fi
 #      e - verify count of replicas and checksums on target resource
 #      f - if results found in step 3b, abort immediately with error!
 #
-# TODO: Distinguishing between non-zero and empty files not necessary here? Since everything will be replicated (zero and non-zero files). Distinction was only required in verification of checksum between replicas...
+# Note: We only count the non-zero files here, since that's the statistic we can reliably compare with the value of DST_COUNT.
 QUERY="select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_NAME = '${SRC_RESC}' AND DATA_SIZE > '0'"
 LOG $DBG "Executing: iquest --no-page \"%d\" \"${QUERY}\""
 SRC_COUNT=$(iquest --no-page "%d" "${QUERY}")
