@@ -30,7 +30,7 @@
 
 ### CONFIGURATION #############################################################
 SCRIPTFILE=${0##*/}
-LOGFILE="/tmp/${SCRIPTFILE%.sh}.log"
+LOGFILEBASE="$PWD/${SCRIPTFILE%.sh}"    # Defaults to logfile in the current working dir
 COLL_PATH="/nlmumc/projects"
 
 ### CONSTANTS #################################################################
@@ -90,7 +90,7 @@ function syntax {
                                 ; define the logging level (default=WRN)
         -d --display-logs       ; display logs on standard output
         -y                      ; don't ask for keypress to continue
-        -l --logfile=logfile    ; logfile to write to (overwriting ${LOGFILE})
+        -l --logfile=logfile    ; path to logfile base name (overwriting ${LOGFILEBASE})
 
         --commit                ; actually perform the migration (without it's only a simulation)
 
@@ -202,11 +202,6 @@ function create_checksums {
 
 
 
-# In case the provided logfile is not accessible for writing, write the logs to output
-if [ ! -w "$LOGFILE" ];then
-    DISPLAY_LOGS=2
-    echo "Cannot write to logfile ${LOGFILE}. Writing to standard out instead."
-fi
 
 # First pass command line args
 ! getopt --test > /dev/null
@@ -272,7 +267,7 @@ while true; do
             shift
             ;;
         -l|--logfile)
-            LOGFILE="$2"
+            LOGFILEBASE="$2"
             shift 2
             ;;
         --commit)
@@ -302,6 +297,15 @@ fi
 COLL="${COLL_PATH}/${PROJ_NAME}"
 if [[ -n ${COLL_NAME} ]]; then
   COLL="${COLL}/${COLL_NAME}"
+fi
+
+LOGFILE="${LOGFILEBASE}_${PROJ_NAME}${COLL_NAME}_$(date '+%Y%m%d-%H%M%S').log"
+
+# In case the provided logfile is not accessible for writing, write the logs to output
+touch $LOGFILE
+if [ ! -w "$LOGFILE" ];then
+    DISPLAY_LOGS=2
+    echo "Cannot write to logfile ${LOGFILE}. Writing to standard out instead."
 fi
 
 LOG $DBG  ""

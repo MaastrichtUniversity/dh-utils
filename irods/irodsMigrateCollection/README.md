@@ -24,7 +24,7 @@
       -v --verbose=level    verbose output (Debug, Info, Warning, Error)
       -d --display-logs     display logs to console 
       -y                    don't ask for confirmation
-      -l --logfile=logfile  logfile to write to (overwriting default)
+      -l --logfile=logfile  path to logfile base name (overwriting default). Example: /tmp/mylogfile
 
 ## Usage
 1. Get a working _rodsadmin_ connection through `iinit` from an iRODS server of choice. 
@@ -39,3 +39,6 @@
 
     `./irodsMigrateCollection.sh -P P000000001 -C C000000001 -R replRescAZM01 -v DBG -d -y --commit` 
 
+## Logfile
+By default, the logfile will be created in the current working dir. It has a name like `irodsMigrateCollection_<PROJECT><COLLECTION>_<DATE>-<TIMESTAMP>.log`.
+If the logfile cannot be created in this default folder (or the override folder from the `--logfile` option), the script will notify you and write output only to stdout.
