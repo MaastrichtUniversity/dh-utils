@@ -6,6 +6,8 @@ Use virtualenv to install dependencies
 ```bash
 python3 -m venv datahub 
 source datahub/bin/activate
+pip install --upgrade pip
+pip install wheel
 pip install -r requirements.txt
 ```
 
