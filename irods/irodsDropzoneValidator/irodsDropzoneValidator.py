@@ -118,6 +118,11 @@ def main():
     pool = Pool(processes=config.parallel)
     results = list()
 
+    logger.info("Making inventory of source directory '%s'" % config.source)
+
+    # Setup file progress
+    progress_bar = tqdm(unit="files", unit_scale=True, disable=config.quiet)
+
     # Fill input queue with the source directory
     total_bytes = 0
     for root, dirs, files in os.walk(config.source, topdown=False):
@@ -126,11 +131,14 @@ def main():
             rel_path = os.path.relpath(os_path, config.source)
 
             results.append(pool.apply_async(checksum_calculator, args=(config, rel_path)))
+            progress_bar.update(1)
 
             # Byte size
             stat = os.stat(os_path)
             total_bytes += stat.st_size
 
+    # Finish inventory
+    progress_bar.close()
     logger.info("Validating %d files and %d bytes in source directory." % (len(results), total_bytes))
 
     # Setup progress
