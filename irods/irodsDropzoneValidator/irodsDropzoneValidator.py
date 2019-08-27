@@ -16,6 +16,7 @@ from irods.session import iRODSSession
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description=__doc__,
+        formatter_class=lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=40, width=100)
     )
 
     parser.add_argument("-s", "--source", metavar='DIR', help="Source directory to check")
@@ -23,6 +24,8 @@ def parse_arguments():
     parser.add_argument("-q", "--quiet", action='store_true', help="Hide progress and only show errors")
     parser.add_argument("-v", "--verbose", action='store_true', help="Be extra verbose")
     parser.add_argument("-c", "--continue", action='store_true', help="Continue on validation error")
+    parser.add_argument("-p", "--parallel", type=int, help="Number of parallel processes running checksum",
+                        default=1)
 
     settings = parser.parse_args()
 
@@ -96,7 +99,7 @@ def main():
     session = irods_session()
 
     # Multiprocessing pool and result list
-    pool = Pool(processes=1)
+    pool = Pool(processes=config.parallel)
     results = list()
 
     # Fill input queue with the source directory
