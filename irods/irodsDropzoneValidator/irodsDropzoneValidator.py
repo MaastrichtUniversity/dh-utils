@@ -68,15 +68,28 @@ def checksum_calculator(config, p):
     return p, size, checksum
 
 
-def irods_session():
+def irods_session(config):
     # iRODS config
     try:
         env_file = os.environ['IRODS_ENVIRONMENT_FILE']
     except KeyError:
         env_file = os.path.expanduser('~/.irods/irods_environment.json')
 
-    # Build iRODS connection
-    session = iRODSSession(irods_env_file=env_file)
+    try:
+        # Build iRODS connection
+        session = iRODSSession(irods_env_file=env_file)
+    except FileNotFoundError:
+        logger.error("No `~/.irods/irods_environment.json` found. Use iinit to make one.")
+        return None
+
+    try:
+        session.collections.get(config.target)
+    except NetworkException:
+        logger.error("Error connecting to iRODS. Check ~/.irods/irods_environment.json and iinit.")
+        return None
+    except CollectionDoesNotExist:
+        logger.error("Target collection `%s` does not exist" % config.target)
+        return None
 
     return session
 
@@ -97,7 +110,9 @@ def main():
         logger.setLevel(logging.DEBUG)
 
     # iRODS connection
-    session = irods_session()
+    session = irods_session(config)
+    if session is None:
+        return 1
 
     # Multiprocessing pool and result list
     pool = Pool(processes=config.parallel)
