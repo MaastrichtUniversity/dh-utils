@@ -89,6 +89,7 @@ def irods_session(config):
         return None
     except CollectionDoesNotExist:
         logger.error("Target collection `%s` does not exist" % config.target)
+        session.cleanup()
         return None
 
     return session
@@ -118,10 +119,9 @@ def main():
     pool = Pool(processes=config.parallel)
     results = list()
 
+    # Setup inventory progress
     logger.info("Making inventory of source directory '%s'" % config.source)
-
-    # Setup file progress
-    progress_bar = tqdm(unit="files", unit_scale=True, disable=config.quiet)
+    progress_inv = tqdm(unit="files", unit_scale=True, disable=config.quiet)
 
     # Fill input queue with the source directory
     total_bytes = 0
@@ -131,18 +131,19 @@ def main():
             rel_path = os.path.relpath(os_path, config.source)
 
             results.append(pool.apply_async(checksum_calculator, args=(config, rel_path)))
-            progress_bar.update(1)
+            progress_inv.update(1)
 
             # Byte size
             stat = os.stat(os_path)
             total_bytes += stat.st_size
 
     # Finish inventory
-    progress_bar.close()
+    progress_inv.close()
     logger.info("Validating %d files and %d bytes in source directory." % (len(results), total_bytes))
 
     # Setup progress
-    progress_bar = tqdm(unit="bytes", unit_scale=True, total=total_bytes, disable=config.quiet)
+    progress_bytes = tqdm(unit="bytes", unit_scale=True, total=total_bytes, disable=config.quiet, position=0)
+    progress_files = tqdm(unit="files", unit_scale=True, total=len(results), disable=config.quiet, position=1)
 
     # Loop through results and check with iRODS
     try:
@@ -151,7 +152,8 @@ def main():
             p, size, checksum = result.get()
 
             # Update progress bar
-            progress_bar.update(size)
+            progress_bytes.update(size)
+            progress_files.update(1)
 
             # Get iRODS object
             total_p = os.path.join(config.target, p)
@@ -193,7 +195,8 @@ def main():
         # Terminate worker and progress bar
         pool.terminate()
         pool.join()
-        progress_bar.close()
+        progress_bytes.close()
+        progress_files.close()
         session.cleanup()
 
     logger.info("Finished validation")
