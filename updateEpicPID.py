@@ -23,6 +23,7 @@ timeString = time.strftime("%m%d%y%H%M%S", tme)
 outputFile = inputFile.split(".")[0] + '_' + timeString+'.csv'
 
 logging.basicConfig(filename=inputFile.split(".")[0] + '_' + timeString+'.log', level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
+logging.getLogger().addHandler(logging.StreamHandler())
 
 
 def updateURLforPID(pid, newURL):
@@ -30,7 +31,6 @@ def updateURLforPID(pid, newURL):
     url = epicRequestURL + pid
     try:
         response = requests.post(url, data={'URL': newURL}, auth=HTTPBasicAuth(epicUsername, epicPassword))
-        response = requests.get(url, auth=HTTPBasicAuth(epicUsername, epicPassword))
         # If the response was successful, no Exception will be raised
         response.raise_for_status()
     except HTTPError as http_err:
@@ -64,8 +64,9 @@ def parseResponse(collection, pid, response):
         else:
             logging.warning("Update not required no URL match")
 
-########### MAIN ##################
 
+
+########### MAIN ##################
 
 def main():
     logging.info("epicRequestURL is: " + epicRequestURL)
@@ -94,7 +95,7 @@ def main():
                 # If the response was successful, no Exception will be raised
                 response.raise_for_status()
             except HTTPError as http_err:
-               logging.error(f'HTTP error occurred: {http_err}')  # Python 3.6
+                logging.error(f'HTTP error occurred: {http_err}')  # Python 3.6
             except Exception as err:
                 logging.error(f'Other error occurred: {err}')  # Python 3.6
             else:
@@ -102,6 +103,7 @@ def main():
 
     logging.info("-------------------------------")
     logging.info("...Finished")
+
 
 if __name__ == '__main__':
     main()
