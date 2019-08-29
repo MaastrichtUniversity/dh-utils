@@ -20,7 +20,8 @@ dryRun = True
 
 tme = time.localtime()
 timeString = time.strftime("%m%d%y%H%M%S", tme)
-outputFile = inputFile.split(".")[0] + '_' + timeString+'.csv'
+outputFileChanged = inputFile.split(".")[0] + '_' + timeString+'_changed.csv'
+outputFileOriginal = inputFile.split(".")[0] + '_' + timeString+'_original.csv'
 
 logging.basicConfig(filename=inputFile.split(".")[0] + '_' + timeString+'.log', level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
 logging.getLogger().addHandler(logging.StreamHandler())
@@ -46,7 +47,7 @@ def updatePID(collection, pid, currentURL):
     parsed = urlparse(currentURL)
     replaced = parsed._replace(netloc=urlparse(newBaseURL).netloc)
     newURL = replaced.geturl()
-    f = open(outputFile, 'a')
+    f = open(outputFileChanged, 'a')
     f.write(collection+"," + pid+"," + currentURL + "," + newURL + "\n")
     f.close()
     logging.info("New url: " + newURL)
@@ -58,6 +59,9 @@ def parseResponse(collection, pid, response):
     epicJson = response.json()
     if epicJson["values"][0]["type"] == "URL":
         currentURL = epicJson["values"][0]["data"]["value"]
+        f = open(outputFileOriginal, 'a')
+        f.write(collection + "," + pid + "," + currentURL + "\n")
+        f.close()
         logging.info("currentURL is: " + currentURL)
         if currentURL.startswith(expectedOldURL):
             updatePID(collection, pid, currentURL)
