@@ -12,7 +12,7 @@ epicPreFix = "21.T12996"
 epicUsername = "user"
 epicPassword = "foobar"
 
-inputFile = "dev2.csv"
+inputFile = "epic_hdl_acc.txt"
 expectedOldURL = "https://datahub.mumc-acc.maastrichtuniversity.nl"
 newBaseURL = "https://rdm.acc.dh.unimaas.nl"
 
@@ -46,6 +46,7 @@ def updatePID(collection, pid, currentURL):
 
     parsed = urlparse(currentURL)
     replaced = parsed._replace(netloc=urlparse(newBaseURL).netloc)
+    replaced = replaced._replace(scheme=urlparse(newBaseURL).scheme)
     newURL = replaced.geturl()
     f = open(outputFileChanged, 'a')
     f.write(collection+"," + pid+"," + currentURL + "," + newURL + "\n")
