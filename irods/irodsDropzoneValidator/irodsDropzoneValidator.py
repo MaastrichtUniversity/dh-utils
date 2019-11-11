@@ -201,6 +201,8 @@ def main():
 
     logger.info("Finished validation")
 
+    return 0
+
 
 if __name__ == "__main__":
     try:
