@@ -334,11 +334,19 @@ ils "$COLL" 1>/dev/null || LOG $ERR "Can't access collection '${COLL}'. Script a
 #
 
 # get rescource of specified collection
-LOG $DBG "Executing: iquest \"%s\" \"select DATA_RESC_NAME where COLL_NAME like '${COLL}%'\""
-SRC_RESC=$(iquest "%s" "select DATA_RESC_NAME where COLL_NAME like '${COLL}%'")
+LOG $DBG "Executing: iquest \"%s\" \"select DATA_RESC_HIER where COLL_NAME like '${COLL}%'\""
+SRC_RESC=$(iquest "%s" "select DATA_RESC_HIER where COLL_NAME like '${COLL}%'")
 if [[ -z ${SRC_RESC} ]]; then
     LOG $ERR "No resource found for collection '${COLL}' in irods!" ${IRODS_ERROR}
 fi
+
+# CHANGED: Since iRODS 4.2 DATA_RESC_RESC doesn't return the composing resource, but the leaves
+# whiched causes issues in checking the source resource.
+# Now the DATA_RESC_HIER is retrieved, which returns the complete resource hierachie. In order to
+# get unique values, we need to strip the leaves from variable SRC_RESC and deduplicate.
+SRC_RESC=$(echo ${SRC_RESC%%;*}|sort -u)
+
+
 RESC_NUM=$(echo "${SRC_RESC}"|wc -l)
 SRC_RESC=${SRC_RESC//[$'\n\r']/,}
 
@@ -389,9 +397,12 @@ create_checksums
 #      info: grep -v inverts the match and returns all NON-matching lines
 
 LOG $DBG "Verifying checksums and number of replicas"
-QUERY="select count(DATA_NAME), DATA_RESC_NAME, DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' and COLL_NAME like '${COLL}%'"
-LOG $DBG "iquest --no-page \"%2d %-14s %-52s %12d %s/%s\" \"${QUERY}\" \| grep -v \"^ 2\""
-ISSUES=$(iquest --no-page "%2d %-14s %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
+## CHANGED: Since iRODS 4.2 DATA_RESC_NAME return leave resource instead of composing resource
+## As we already know that all datafiles are on the same composing resource, the name of the
+## resource is superfluous and can be removed
+QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' and COLL_NAME like '${COLL}%'"
+LOG $DBG "iquest --no-page \"%2d %-52s %12d %s/%s\" \"${QUERY}\" \| grep -v \"^ 2\""
+ISSUES=$(iquest --no-page "%2d %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
 
 if [[ -n "${ISSUES}" ]]; then
   LOG $ERR "Errors encountered in checksums or number of replicas. Aborting before migration. Details: \n${ISSUES}" ${CHECKSUM_ERROR}
@@ -409,7 +420,7 @@ fi
 #      f - if results found in step 3b, abort immediately with error!
 #
 # Note: We only count the non-zero files here, since that's the statistic we can reliably compare with the value of DST_COUNT.
-QUERY="select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_NAME = '${SRC_RESC}' AND DATA_SIZE > '0'"
+QUERY="select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${SRC_RESC}%' AND DATA_SIZE > '0'"
 LOG $DBG "Executing: iquest --no-page \"%d\" \"${QUERY}\""
 SRC_COUNT=$(iquest --no-page "%d" "${QUERY}")
 
@@ -427,7 +438,7 @@ LOG $DBG "Replication finished"
 if ${COMMIT}; then
 
   LOG $INF "Verify count of data objects on target resource ${DST_RESC}"
-  QUERY="select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_NAME = '${DST_RESC}' AND DATA_SIZE > '0'"
+  QUERY="select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${DST_RESC}%' AND DATA_SIZE > '0'"
   LOG $DBG "Executing: iquest --no-page \"%d\" \"${QUERY}\""
   DST_COUNT=$(iquest --no-page "%d" "${QUERY}")
   LOG $INF "Number of (non-zero) files on target resource: ${DST_COUNT}"
@@ -439,9 +450,9 @@ if ${COMMIT}; then
   fi
 
   LOG $INF "Verify count of replicas and checksums on target resource ${DST_RESC}"
-  QUERY="select count(DATA_NAME), DATA_RESC_NAME, DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' AND COLL_NAME like '${COLL}%' AND DATA_RESC_NAME = '${DST_RESC}'"
-  LOG $DBG "Executing: iquest --no-page \"%2d %-14s %-52s %12d %s/%s\" \"${QUERY}\""
-  ISSUES=$(iquest --no-page "%2d %-14s %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
+  QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' AND COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${DST_RESC}%'"
+  LOG $DBG "Executing: iquest --no-page \"%2d %-52s %12d %s/%s\" \"${QUERY}\""
+  ISSUES=$(iquest --no-page "%2d %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
 
   if [[ -n "${ISSUES}" ]]; then
     LOG $ERR "Errors encountered in checksums or number of replicas on target resource ${DST_RESC}."
@@ -479,9 +490,9 @@ LOG $DBG "Trim operations finished"
 if $COMMIT; then
 
   LOG $INF "Verify that no files are left on original resource ${SRC_RESC} for collection ${COLL}"
-  QUERY="select count(DATA_NAME), DATA_RESC_NAME, DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where COLL_NAME like '${COLL}%' AND DATA_RESC_NAME = '${SRC_RESC}'"
-  LOG $DBG "Executing: iquest --no-page \"%2d %-14s %-52s %12d %s/%s\" \"${QUERY}\""
-  ISSUES=$(iquest --no-page "%2d %-14s %-52s %12d %s/%s" "${QUERY}")
+  QUERY="select count(DATA_NAME), DATA_RESC_HIER, DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${SRC_RESC}%'"
+  LOG $DBG "Executing: iquest --no-page \"%2d %-24s %-52s %12d %s/%s\" \"${QUERY}\""
+  ISSUES=$(iquest --no-page "%2d %-24s %-52s %12d %s/%s" "${QUERY}")
   ISSUES=${ISSUES//'CAT_NO_ROWS_FOUND: Nothing was found matching your query'}
 
   if [[ -n "${ISSUES}" ]]; then
@@ -489,10 +500,10 @@ if $COMMIT; then
   fi
   LOG $DBG "Verification finished"
 
-  LOG $INF "Final verification for count of replicas and checksums "
-  QUERY="select count(DATA_NAME), DATA_RESC_NAME, DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' AND COLL_NAME like '${COLL}%'"
-  LOG $DBG "Executing: iquest --no-page \"%2d %-14s %-52s %12d %s/%s\" \"${QUERY}\""
-  ISSUES=$(iquest --no-page "%2d %-14s %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
+  LOG $INF "Final verification for count of replicas and checksums on destination resource"
+  QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' AND COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${DST_RESC}%'"
+  LOG $DBG "Executing: iquest --no-page \"%2d %-24s %-52s %12d %s/%s\" \"${QUERY}\""
+  ISSUES=$(iquest --no-page "%2d %-24s %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
 
   if [[ -n "${ISSUES}" ]]; then
     LOG $ERR "Found data objects in collection ${COLL} that do not have exactly 2 replicas. Details: \n${ISSUES}" ${TRIM_ERROR}
@@ -500,6 +511,11 @@ if $COMMIT; then
   LOG $DBG "Final verification finished"
 
   LOG $INF "Collection ${COLL} has been succesfully migrated from ${SRC_RESC} to ${DST_RESC}\n"
+
+  LOG $INF "Final verification for count of replicas and checksums in irods"
+  QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' AND COLL_NAME like '${COLL}%'"
+  LOG $DBG "Executing: iquest --no-page \"%2d %-24s %-52s %12d %s/%s\" \"${QUERY}\""
+  ISSUES=$(iquest --no-page "%2d %-24s %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
 
 else
 
@@ -509,3 +525,4 @@ else
 fi
 
 exit 0
+
