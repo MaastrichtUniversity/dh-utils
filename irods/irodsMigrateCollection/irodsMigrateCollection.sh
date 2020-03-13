@@ -120,10 +120,10 @@ function LOG {
     # write to logfile
     if [[ ${LVL} -le ${LOGLEVEL} ]];then
         if [[ ${DISPLAY_LOGS} -lt 2 ]];then
-            printf "%s | %-7s | %b\n" "$(date)" "${LVLARR[$LVL]}" "${TXT}" >>"${LOGFILE}"
+            printf "%s | %-7s | %b\n" "$(date --iso-8601=ns)" "${LVLARR[$LVL]}" "${TXT}" >>"${LOGFILE}"
         fi
         if [[ ${DISPLAY_LOGS} -gt 0 ]];then
-            printf "%s | %-7s | %b\n" "$(date)" "${LVLARR[$LVL]}" "${TXT}"
+            printf "%s | %-7s | %b\n" "$(date --iso-8601=ns)" "${LVLARR[$LVL]}" "${TXT}"
             #echo "$(date) | ${LVLARR[$LVL]} | ${TXT}"
         fi
     fi
