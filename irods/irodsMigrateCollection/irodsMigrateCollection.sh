@@ -400,7 +400,7 @@ LOG $DBG "Verifying checksums and number of replicas"
 ## CHANGED: Since iRODS 4.2 DATA_RESC_NAME return leave resource instead of composing resource
 ## As we already know that all datafiles are on the same composing resource, the name of the
 ## resource is superfluous and can be removed
-QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' and COLL_NAME like '${COLL}%'"
+QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where COLL_NAME like '${COLL}%'"
 LOG $DBG "iquest --no-page \"%2d %-52s %12d %s/%s\" \"${QUERY}\" \| grep -v \"^ 2\""
 ISSUES=$(iquest --no-page "%2d %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
 
@@ -420,7 +420,7 @@ fi
 #      f - if results found in step 3b, abort immediately with error!
 #
 # Note: We only count the non-zero files here, since that's the statistic we can reliably compare with the value of DST_COUNT.
-QUERY="select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${SRC_RESC}%' AND DATA_SIZE > '0'"
+QUERY="select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${SRC_RESC}%' "
 LOG $DBG "Executing: iquest --no-page \"%d\" \"${QUERY}\""
 SRC_COUNT=$(iquest --no-page "%d" "${QUERY}")
 
@@ -438,7 +438,7 @@ LOG $DBG "Replication finished"
 if ${COMMIT}; then
 
   LOG $INF "Verify count of data objects on target resource ${DST_RESC}"
-  QUERY="select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${DST_RESC}%' AND DATA_SIZE > '0'"
+  QUERY="select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${DST_RESC}%' "
   LOG $DBG "Executing: iquest --no-page \"%d\" \"${QUERY}\""
   DST_COUNT=$(iquest --no-page "%d" "${QUERY}")
   LOG $INF "Number of (non-zero) files on target resource: ${DST_COUNT}"
@@ -450,7 +450,7 @@ if ${COMMIT}; then
   fi
 
   LOG $INF "Verify count of replicas and checksums on target resource ${DST_RESC}"
-  QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' AND COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${DST_RESC}%'"
+  QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${DST_RESC}%'"
   LOG $DBG "Executing: iquest --no-page \"%2d %-52s %12d %s/%s\" \"${QUERY}\""
   ISSUES=$(iquest --no-page "%2d %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
 
@@ -519,7 +519,7 @@ if $COMMIT; then
   LOG $DBG "Verification finished"
 
   LOG $INF "Final verification for count of replicas and checksums "
-  QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' AND COLL_NAME like '${COLL}%'"
+  QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where COLL_NAME like '${COLL}%'"
   LOG $DBG "Executing: iquest --no-page \"%2d %-24s %-52s %12d %s/%s\" \"${QUERY}\""
   ISSUES=$(iquest --no-page "%2d %-24s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
 
