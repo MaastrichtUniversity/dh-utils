@@ -546,7 +546,7 @@ if $COMMIT; then
       COSTS_OLD=$(irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'")
       irule -F /rules/misc/setCollectionSize.r "*project='${PROJ_NAME}'" "*projectCollection='${COLL_NAME}'" "*openPC='true'" "*closePC='true'"
       COSTS_NEW=$(irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'")
-      LOG $INF "Costs for project ${COLL_NAME} are decreased from ${COSTS_OLD} to ${COSTS_NEW}"
+      LOG $INF "Costs for project ${PROJ_NAME} are decreased from ${COSTS_OLD} to ${COSTS_NEW}"
     fi
   else
     # Update collections costs for this project
@@ -559,7 +559,7 @@ if $COMMIT; then
       done
     fi
     COSTS_NEW=$(irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'")
-    LOG $INF "Costs for project ${COLL_NAME} are decreased from ${COSTS_OLD} to ${COSTS_NEW}"
+    LOG $INF "Costs for project ${PROJ_NAME} are decreased from ${COSTS_OLD} to ${COSTS_NEW}"
   fi
 
 else
