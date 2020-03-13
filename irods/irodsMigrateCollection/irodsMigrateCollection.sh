@@ -63,6 +63,7 @@ DST_RESC=
 PROJ_NAME=
 COLL_NAME=
 COLL=
+OUTPUT_ROUTING=
 
 ### LOCAL FUNCTIONS ############################################################
 
@@ -166,9 +167,12 @@ function create_checksums {
 
   # Do the checksum calculation and store in iRODS catalog
   LOG $DBG " - calculating checksums on all replicas"
-  LOG $DBG " ${EXECSTR}: ichksum -r -a -K $COLL"
+  LOG $DBG " ${EXECSTR}: ichksum -r -a -K $COLL ${OUTPUT_ROUTING}"
   if $COMMIT; then
-    ichksum -r -a -K $COLL || CHECKSUM_FAILED=true
+    ichksum -r -a -K $COLL ${OUTPUT_ROUTING} 
+    if [ $? -ne 0 ]; then
+       CHECKSUM_FAILED=true
+    fi
   fi
 
   # Closing collection (or subcollections)
@@ -300,12 +304,18 @@ if [[ -n ${COLL_NAME} ]]; then
 fi
 
 LOGFILE="${LOGFILEBASE}_${PROJ_NAME}${COLL_NAME}_$(date '+%Y%m%d-%H%M%S').log"
+if [ ${DISPLAY_LOGS} -gt 0 ]; then
+  OUTPUT_ROUTING="| tee -a \"${LOGFILE}\""
+else
+  OUTPUT_ROUTING=">> \"${LOGFILE}\""
+fi
 
 # In case the provided logfile is not accessible for writing, write the logs to output
 touch $LOGFILE
 if [ ! -w "$LOGFILE" ];then
     DISPLAY_LOGS=2
     echo "Cannot write to logfile ${LOGFILE}. Writing to standard out instead."
+    OUTPUT_ROUTING=""
 fi
 
 LOG $DBG  ""
@@ -431,7 +441,10 @@ if $CONFIRM; then read -r -n 1 -p "  --> press any key to start replication"; fi
 LOG $INF "Replicating ${COLL} from ${SRC_RESC} to ${DST_RESC}"
 LOG $DBG "${EXECSTR}: irepl -r -M -P ${VERBOSE_PARAM} -R \"${DST_RESC}\" \"${COLL}\""
 if $COMMIT; then
-  irepl -r -M -P ${VERBOSE_PARAM} -R "${DST_RESC}" "${COLL}" || LOG $ERR "irepl command returned errorcode '$?'" ${IRODS_ERROR}
+  irepl -r -M -P ${VERBOSE_PARAM} -R "${DST_RESC}" "${COLL}" ${OUTPUT_ROUTING}
+  if [ $? _ne 0 ]; then
+    LOG $ERR "irepl command returned errorcode '$?'" ${IRODS_ERROR}
+  fi
 fi
 LOG $DBG "Replication finished"
 
@@ -494,7 +507,7 @@ for RESC in $(iquest "%s" "${QUERY}"); do
   count=$(iquest "%d" "select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_NAME = '${RESC}'")
   LOG $DBG "${EXECSTR}: Found ${count} data objects found on resource '${RESC}'"
   if [ $count -gt 0 ]; then
-    CMD="itrim -r -M ${VERBOSE_PARAM} -S ${RESC} ${COLL}"
+    CMD="itrim -r -M ${VERBOSE_PARAM} -S ${RESC} ${COLL} ${OUTPUT_ROUTING}"
     LOG $DBG "${EXECSTR}: $CMD"
     if ${COMMIT}; then
       $CMD || LOG $ERR "itrim command returned errorcode '$?'" ${IRODS_ERROR}
