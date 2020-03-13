@@ -482,7 +482,7 @@ if $CONFIRM ; then read -r -n 1 -p "  --> press any key to start trimming"; fi
 LOG $INF "Removing (trimming) files for ${COLL} from ${SRC_RESC}"
 
 # get child resource names of source resource
-QUERY="select DATA_RESC_NAME where DATA_NAME = 'metadata.xml' AND COLL_NAME = '${COLL}' AND DATA_RESC_HIER like '${SRC_RESC}%'"
+QUERY="select DATA_RESC_NAME where COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${SRC_RESC}%'"
 for RESC in $(iquest "%s" "${QUERY}"); do
 
   # WORKAROUND: apparently when resource 4k is trimmed, 4k-repl is trimmed implicitly as well (visa versa thatś not the case)
@@ -528,7 +528,32 @@ if $COMMIT; then
   fi
   LOG $DBG "Final verification finished"
 
-  LOG $INF "Collection ${COLL} has been succesfully migrated from ${SRC_RESC} to ${DST_RESC}\n"
+  LOG $INF "Collection ${COLL} has been succesfully migrated from ${SRC_RESC} to ${DST_RESC}"
+
+  # Update project cost (or subcollections)
+  LOG $DBG "Update project cost"
+  if [[ -n ${COLL_NAME} ]];then
+    if $COMMIT; then
+      LOG $DBG " - old project cost"
+      irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'"
+      irule -F /rules/misc/setCollectionSize.r "*project='${PROJ_NAME}'" "*projectCollection='${COLL_NAME}'" "*openPC='true'" "*closePC='true'"
+      LOG $DBG " - new project cost"
+      irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'"
+    fi
+  else
+    # Update collections costs for this project
+    LOG $DBG " - old project cost"
+    irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'"
+    for SUBCOLL_NAME in $(ils $COLL | grep '  C- ' | sed 's/  C- //g'); do
+      SUBCOLL_NAME="${SUBCOLL_NAME##*/}"
+      LOG $DBG "   - ${SUBCOLL_NAME}"
+      if $COMMIT; then
+      irule -F /rules/misc/setCollectionSize.r "*project='${PROJ_NAME}'" "*projectCollection='${SUBCOLL_NAME}'" "*openPC='true'" "*closePC='true'"
+      fi
+    done
+    LOG $DBG " - new project cost"
+    irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'"
+  fi
 
 else
 
