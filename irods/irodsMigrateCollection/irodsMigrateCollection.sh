@@ -429,9 +429,9 @@ LOG $INF "Number of (non-zero) files to be migrated: ${SRC_COUNT} (note they are
 if $CONFIRM; then read -r -n 1 -p "  --> press any key to start replication"; fi
 
 LOG $INF "Replicating ${COLL} from ${SRC_RESC} to ${DST_RESC}"
-LOG $DBG "${EXECSTR}: irepl -r -M -P ${VERBOSE_PARAM} -S \"${SRC_RESC}\" -R \"${DST_RESC}\" \"${COLL}\""
+LOG $DBG "${EXECSTR}: irepl -r -M -P ${VERBOSE_PARAM} -R \"${DST_RESC}\" \"${COLL}\""
 if $COMMIT; then
-  irepl -r -M -P ${VERBOSE_PARAM} -S "${SRC_RESC}" -R "${DST_RESC}" "${COLL}" || LOG $ERR "irepl command returned errorcode '$?'" ${IRODS_ERROR}
+  irepl -r -M -P ${VERBOSE_PARAM} -R "${DST_RESC}" "${COLL}" || LOG $ERR "irepl command returned errorcode '$?'" ${IRODS_ERROR}
 fi
 LOG $DBG "Replication finished"
 
@@ -446,7 +446,7 @@ if ${COMMIT}; then
   if [[ ! ${SRC_COUNT} -eq ${DST_COUNT} ]]; then
     LOG $ERR "Number of files not consistent on both resources (${SRC_COUNT} data objects on ${SRC_RESC}, ${DST_COUNT} data objects on ${DST_RESC})!"
     LOG $ERR "Aborting operation after replication!"
-    LOG $ERR "To undo the replication, use the following command \n\n    itrim -r -M -v -S ${DST_RESC} ${COLL}\n" ${IRODS_ERROR}
+    LOG $ERR "To undo the replication, use the following command for each child resource \n\n    itrim -r -M -v -S ${DST_RESC};<child-resource> ${COLL}\n" ${IRODS_ERROR}
   fi
 
   LOG $INF "Verify count of replicas and checksums on target resource ${DST_RESC}"
@@ -458,7 +458,7 @@ if ${COMMIT}; then
     LOG $ERR "Errors encountered in checksums or number of replicas on target resource ${DST_RESC}."
     LOG $ERR "Please investigate issues before taking any further actions on this collection!"
     LOG $ERR "Aborted after replication. Details: \n${ISSUES}" ${CHECKSUM_ERROR}
-    LOG $ERR "To undo the replication, use the following command \n\n    itrim -r -M -v -S ${DST_RESC} ${COLL}\n" ${IRODS_ERROR}
+    LOG $ERR "To undo the replication, use the following command for each child resource \n\n    itrim -r -M -v -S ${DST_RESC};<child-resource> ${COLL}\n" ${IRODS_ERROR}
   fi
   LOG $DBG "Checksum and replication count done finished"
 
@@ -471,7 +471,7 @@ fi
 
 #
 #  4 - REMOVE COLLECTION FROM SOURCE RESOURCE
-#      a - execute itrim to recursively remove all files files (and subcollections) from source resource
+#      a - execute itrim to recursively remove all files files (and subcollections) from source resource child-resources
 #          now we have 2 replicas on the target resource (2,3)
 #      b - ensure no replicas are left on source resource
 #      c - if results found in step 4b, abort immediately with error!
@@ -480,11 +480,29 @@ fi
 #
 if $CONFIRM ; then read -r -n 1 -p "  --> press any key to start trimming"; fi
 LOG $INF "Removing (trimming) files for ${COLL} from ${SRC_RESC}"
-CMD="itrim -r -M ${VERBOSE_PARAM} -S ${SRC_RESC} ${COLL}"
-LOG $DBG "${EXECSTR}: $CMD"
-if ${COMMIT}; then
-  $CMD || LOG $ERR "itrim command returned errorcode '$?'" ${IRODS_ERROR}
-fi
+
+# get child resource names of source resource
+QUERY="select DATA_RESC_NAME where DATA_NAME = 'metadata.xml' AND COLL_NAME = '${COLL}' AND DATA_RESC_HIER like '${SRC_RESC}%'"
+for RESC in $(iquest "%s" "${QUERY}"); do
+
+  # WORKAROUND: apparently when resource 4k is trimmed, 4k-repl is trimmed implicitly as well (visa versa thatś not the case)
+  #             trimming 4k-repl afterwards will fail because there is nothing to trim...
+  #             So letś first check the amount of dataobjects to trim on the (child) resource and only trim if there is
+  #             something to trim.
+
+  # check if dataobjects exist on the RESC resource
+  count=$(iquest "%d" "select count(DATA_NAME) where COLL_NAME like '${COLL}%' AND DATA_RESC_NAME = '${RESC}'")
+  LOG $DBG "${EXECSTR}: Found ${count} data objects found on resource '${RESC}'"
+  if [ $count -gt 0 ]; then
+    CMD="itrim -r -M ${VERBOSE_PARAM} -S ${RESC} ${COLL}"
+    LOG $DBG "${EXECSTR}: $CMD"
+    if ${COMMIT}; then
+      $CMD || LOG $ERR "itrim command returned errorcode '$?'" ${IRODS_ERROR}
+    fi
+  else
+    LOG $DBG "${EXECSTR}: No data objects found on resource '${RESC}', trim is skipped"
+  fi
+done
 LOG $DBG "Trim operations finished"
 
 if $COMMIT; then
@@ -500,10 +518,10 @@ if $COMMIT; then
   fi
   LOG $DBG "Verification finished"
 
-  LOG $INF "Final verification for count of replicas and checksums on destination resource"
-  QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' AND COLL_NAME like '${COLL}%' AND DATA_RESC_HIER like '${DST_RESC}%'"
+  LOG $INF "Final verification for count of replicas and checksums "
+  QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' AND COLL_NAME like '${COLL}%'"
   LOG $DBG "Executing: iquest --no-page \"%2d %-24s %-52s %12d %s/%s\" \"${QUERY}\""
-  ISSUES=$(iquest --no-page "%2d %-24s %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
+  ISSUES=$(iquest --no-page "%2d %-24s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
 
   if [[ -n "${ISSUES}" ]]; then
     LOG $ERR "Found data objects in collection ${COLL} that do not have exactly 2 replicas. Details: \n${ISSUES}" ${TRIM_ERROR}
@@ -511,11 +529,6 @@ if $COMMIT; then
   LOG $DBG "Final verification finished"
 
   LOG $INF "Collection ${COLL} has been succesfully migrated from ${SRC_RESC} to ${DST_RESC}\n"
-
-  LOG $INF "Final verification for count of replicas and checksums in irods"
-  QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where DATA_SIZE > '0' AND COLL_NAME like '${COLL}%'"
-  LOG $DBG "Executing: iquest --no-page \"%2d %-24s %-52s %12d %s/%s\" \"${QUERY}\""
-  ISSUES=$(iquest --no-page "%2d %-24s %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
 
 else
 
@@ -525,4 +538,3 @@ else
 fi
 
 exit 0
-
