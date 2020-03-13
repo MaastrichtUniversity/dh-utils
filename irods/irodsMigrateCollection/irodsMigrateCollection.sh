@@ -166,9 +166,9 @@ function create_checksums {
 
   # Do the checksum calculation and store in iRODS catalog
   LOG $DBG " - calculating checksums on all replicas"
-  LOG $DBG " ${EXECSTR}: ichksum -r -a -K $COLL >>"${LOGFILE}"
+  LOG $DBG " ${EXECSTR}: ichksum -r -a -K $COLL "
   if $COMMIT; then
-    ichksum -r -a -K $COLL >>${LOGFILE}
+    ichksum -r -a -K $COLL >>"${LOGFILE}"
     if [ $? -ne 0 ]; then
        CHECKSUM_FAILED=true
     fi
