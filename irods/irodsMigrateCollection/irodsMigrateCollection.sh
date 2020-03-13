@@ -435,7 +435,7 @@ LOG $INF "Replicating ${COLL} from ${SRC_RESC} to ${DST_RESC}"
 LOG $DBG "${EXECSTR}: irepl -r -M -P ${VERBOSE_PARAM} -R \"${DST_RESC}\" \"${COLL}\""
 if $COMMIT; then
   irepl -r -M -P ${VERBOSE_PARAM} -R "${DST_RESC}" "${COLL}" >>"${LOGFILE}"
-  if [ $? _ne 0 ]; then
+  if [ $? -ne 0 ]; then
     LOG $ERR "irepl command returned errorcode '$?'" ${IRODS_ERROR}
   fi
 fi
