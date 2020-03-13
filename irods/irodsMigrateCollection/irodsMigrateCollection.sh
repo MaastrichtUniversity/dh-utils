@@ -531,28 +531,26 @@ if $COMMIT; then
   LOG $INF "Collection ${COLL} has been succesfully migrated from ${SRC_RESC} to ${DST_RESC}"
 
   # Update project cost (or subcollections)
-  LOG $DBG "Update project cost"
+  LOG $INF "Update project cost"
   if [[ -n ${COLL_NAME} ]];then
     if $COMMIT; then
-      LOG $DBG " - old project cost"
-      irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'"
+      COSTS_OLD=$(irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'")
       irule -F /rules/misc/setCollectionSize.r "*project='${PROJ_NAME}'" "*projectCollection='${COLL_NAME}'" "*openPC='true'" "*closePC='true'"
-      LOG $DBG " - new project cost"
-      irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'"
+      COSTS_NEW=$(irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'")
+      LOG $INF "Costs for project ${COLL_NAME} are decreased from ${COSTS_OLD} to ${COSTS_NEW}"
     fi
   else
     # Update collections costs for this project
-    LOG $DBG " - old project cost"
-    irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'"
-    for SUBCOLL_NAME in $(ils $COLL | grep '  C- ' | sed 's/  C- //g'); do
-      SUBCOLL_NAME="${SUBCOLL_NAME##*/}"
-      LOG $DBG "   - ${SUBCOLL_NAME}"
-      if $COMMIT; then
-      irule -F /rules/misc/setCollectionSize.r "*project='${PROJ_NAME}'" "*projectCollection='${SUBCOLL_NAME}'" "*openPC='true'" "*closePC='true'"
-      fi
-    done
-    LOG $DBG " - new project cost"
-    irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'"
+    COSTS_OLD=$(irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'")
+    if $COMMIT; then
+      for SUBCOLL_NAME in $(ils $COLL | grep '  C- ' | sed 's/  C- //g'); do
+        SUBCOLL_NAME="${SUBCOLL_NAME##*/}"
+        LOG $DBG "   - ${SUBCOLL_NAME}"
+        irule -F /rules/misc/setCollectionSize.r "*project='${PROJ_NAME}'" "*projectCollection='${SUBCOLL_NAME}'" "*openPC='true'" "*closePC='true'"
+      done
+    fi
+    COSTS_NEW=$(irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'")
+    LOG $INF "Costs for project ${COLL_NAME} are decreased from ${COSTS_OLD} to ${COSTS_NEW}"
   fi
 
 else
