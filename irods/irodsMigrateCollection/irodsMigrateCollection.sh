@@ -338,8 +338,9 @@ ils "$COLL" 1>/dev/null || LOG $ERR "Can't access collection '${COLL}'. Script a
 
 # get rescource of specified collection
 LOG $DBG "Executing: iquest \"%s\" \"select DATA_RESC_HIER where COLL_NAME like '${COLL}%'\""
-SRC_RESC=$(iquest "%s" "select DATA_RESC_HIER where COLL_NAME like '${COLL}%'")
-if [[ -z ${SRC_RESC} ]]; then
+tmprescfile=$(mktemp)
+iquest "%s" "select DATA_RESC_HIER where COLL_NAME like '${COLL}%'" >$tmprescfile
+if [ ! -f ${tmprescfile} ]; then
     LOG $ERR "No resource found for collection '${COLL}' in irods!" ${IRODS_ERROR}
 fi
 
@@ -347,7 +348,8 @@ fi
 # whiched causes issues in checking the source resource.
 # Now the DATA_RESC_HIER is retrieved, which returns the complete resource hierachie. In order to
 # get unique values, we need to strip the leaves from variable SRC_RESC and deduplicate.
-SRC_RESC=$(echo ${SRC_RESC%%;*}|sort -u)
+SRC_RESC=$(cut -d ';' -f 1 $tmprescfile | sort -u)
+#SRC_RESC=$(echo ${SRC_RESC%%;*}|sort -u)
 
 
 RESC_NUM=$(echo "${SRC_RESC}"|wc -l)
@@ -362,7 +364,8 @@ LOG $INF "========================================"
 if [[ ${RESC_NUM} -gt 1 ]]; then
     # resource is expected to exist on only ONE (compound) resource, if not ABORT
     LOG $ERR "Collection ${COLL} is located on multiple resources (${SRC_RESC}) where only 1 is expected! Please investigate and fix this situation."
-    LOG $ERR "To remove the collection from one of the resources, use the following command \n\n    itrim -r -M -v -S <resource_of_replica_to_be_deleted> ${COLL}\n"
+    LOG $ERR "To remove the replica's from one of the resources, use the following command \n\n    itrim -r -M -v -S <resource_of_replica_to_be_deleted> ${COLL}\n"
+    LOG $ERR "If the collection is put offline, pull the whole collection online before migrating the collection\n"
     if [[ -z ${COLL_NAME} ]]; then
         LOG $INF "It looks like you tried to migrate an entire project recursively. Multiple resources within a project are likely to occur. Instead of using the itrim command above, try to migrate collections one by one."
     fi
