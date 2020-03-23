@@ -32,6 +32,7 @@
 SCRIPTFILE=${0##*/}
 LOGFILEBASE="$PWD/${SCRIPTFILE%.sh}"    # Defaults to logfile in the current working dir
 COLL_PATH="/nlmumc/projects"
+MAX_FILE_SIZE=268435456000              # 250GB; max. possible filesize that can me migrated to Ceph (with a bit of slack)
 
 ### CONSTANTS #################################################################
 OPTIONS=P:C:R:dhv:zyl:
@@ -44,6 +45,8 @@ DBG=9
 
 INVALID_PARAM_ERROR=1
 COLL_NOT_FOUND=2
+TOO_LARGE_FILES_ERROR=3
+UNKNOWN_ERROR=9
 CHECKSUM_ERROR=11
 TRIM_ERROR=12
 IRODS_ERROR=99
@@ -63,6 +66,7 @@ DST_RESC=
 PROJ_NAME=
 COLL_NAME=
 COLL=
+
 
 ### LOCAL FUNCTIONS ############################################################
 
@@ -311,6 +315,29 @@ if [ ! -w "$LOGFILE" ];then
     echo "Cannot write to logfile ${LOGFILE}. Writing to standard out instead."
 fi
 
+
+# generate human readable max file size value
+MAX_FILE_SIZE_H=${MAX_FILE_SIZE}
+FILE_SIZE_UNIT="B"
+while [ ${MAX_FILE_SIZE_H} -ge 10000 ]; do
+  let MAX_FILE_SIZE_H=${MAX_FILE_SIZE_H}/1024
+  if [[ "${FILE_SIZE_UNIT}" == "TB" ]]; then
+    FILE_SIZE_UNIT="PB"
+  elif [[ "${FILE_SIZE_UNIT}" == "GB" ]]; then
+    FILE_SIZE_UNIT="TB"
+  elif [[ "${FILE_SIZE_UNIT}" == "MB" ]]; then
+    FILE_SIZE_UNIT="GB"
+  elif [[ "${FILE_SIZE_UNIT}" == "KB" ]]; then
+    FILE_SIZE_UNIT="MB"
+  elif [[ "${FILE_SIZE_UNIT}" == "B" ]]; then
+    FILE_SIZE_UNIT="KB"
+  else
+    LOG $ERR "UNKNOWN SIZE UNIT OR MAX_FILE_SIZE IS LARGER THEN 1024 PETABYTE!" $UNKNOWN_ERROR
+  fi
+done
+MAX_FILE_SIZE_H="${MAX_FILE_SIZE_H}${FILE_SIZE_UNIT}"
+
+
 LOG $DBG  ""
 LOG $DBG  "Starting irods collection migration script for collection $COLL"
 
@@ -376,6 +403,17 @@ fi
 if [[ "${DST_RESC}" == "${SRC_RESC}" ]]; then
     LOG $ERR "Target resource ($DST_RESC) and source resource ($SRC_RESC) are the same. So no actions required" ${IRODS_ERROR}
 fi
+
+# Search for files larger than allowed (Ceph resource has cache space of 300GB)
+LOG $INF "Searching for very large files (>${MAX_FILE_SIZE_H})"
+QUERY="\"select DATA_SIZE, COLL_NAME, DATA_NAME where COLL_NAME like '${COLL}%' AND DATA_SIZE > '${MAX_FILE_SIZE}'\""
+LOG $DBG "Executing: iquest \"%15d  %s/%s\" \"${QUERY}\""
+LARGE_FILE_LIST=$(iquest --no-page "%15s  %s/%s" "${QUERY}")
+if [[ "${LARGE_FILE_LIST}" != "CAT_NO_ROWS_FOUND: Nothing was found matching your query" ]]; then
+  #Collections containing files > 250GB will be aborted
+    LOG $ERR "Collection ${COLL} contains files larger than ${MAX_FILE_SIZE_H} and will be aborted!\nDetails:\n${LARGE_FILE_LIST}" ${TOO_LARGE_FILES_ERROR}
+fi
+
 
 # check if resource of collection is a replicated compound resource
 REPL_RESC=$(ilsresc | grep ':replication' | sed s/:replication//g | grep "${SRC_RESC}")
@@ -573,3 +611,4 @@ else
 fi
 
 exit 0
+
