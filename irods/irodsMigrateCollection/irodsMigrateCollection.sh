@@ -32,11 +32,13 @@
 SCRIPTFILE=${0##*/}
 LOGFILEBASE="$PWD/${SCRIPTFILE%.sh}"    # Defaults to logfile in the current working dir
 COLL_PATH="/nlmumc/projects"
-MAX_FILE_SIZE=268435456000              # 250GB; max. possible filesize that can me migrated to Ceph (with a bit of slack)
+#MAX_FILE_SIZE=343597383680             # 320GB; max. possible filesize that can me migrated to Ceph (with a bit of slack)
+MAX_FILE_SIZE=450971566080	#420GB; max possible filesize to migrate to Ceph
+
 
 ### CONSTANTS #################################################################
-OPTIONS=P:C:R:dhv:zyl:
-LONGOPTS=PROJECT,COLLECTION,RESOURCE,display-logs,help,verbose:,z,yes,commit,logfile
+OPTIONS=P:C:R:dhv:zyl:,r
+LONGOPTS=PROJECT,COLLECTION,RESOURCE,display-logs,help,verbose:,z,yes,commit,logfile,resume
 #log levels
 ERR=1
 WRN=2
@@ -57,7 +59,9 @@ IRODS_ERROR=99
 LOGLEVEL=${WRN}
 DISPLAY_LOGS=0
 CONFIRM=true
+DO_CHECKSUMS=true
 CHECKSUM_FAILED=false
+RESUME_MODE=false
 COMMIT=false
 EXECSTR="Simulating"
 VERBOSE_PARAM=""
@@ -95,6 +99,7 @@ function syntax {
         -d --display-logs       ; display logs on standard output
         -y                      ; don't ask for keypress to continue
         -l --logfile=logfile    ; path to logfile base name (overwriting ${LOGFILEBASE})
+        -r --resume             ; resume an aborted migration (skip source resource check, skip the checksumming (if already done)
 
         --commit                ; actually perform the migration (without it's only a simulation)
 
@@ -273,6 +278,10 @@ while true; do
             CONFIRM=false
             shift
             ;;
+        -r|--resume)
+            RESUME_MODE=true
+            shift
+            ;;
         -l|--logfile)
             LOGFILEBASE="$2"
             shift 2
@@ -388,15 +397,19 @@ LOG $INF "========================================"
 
 
 # check if collection is located on multiple (compound) resources
-if [[ ${RESC_NUM} -gt 1 ]]; then
-    # resource is expected to exist on only ONE (compound) resource, if not ABORT
-    LOG $ERR "Collection ${COLL} is located on multiple resources (${SRC_RESC}) where only 1 is expected! Please investigate and fix this situation."
-    LOG $ERR "To remove the replica's from one of the resources, use the following command \n\n    itrim -r -M -v -S <resource_of_replica_to_be_deleted> ${COLL}\n"
-    LOG $ERR "If the collection is put offline, pull the whole collection online before migrating the collection\n"
-    if [[ -z ${COLL_NAME} ]]; then
-        LOG $INF "It looks like you tried to migrate an entire project recursively. Multiple resources within a project are likely to occur. Instead of using the itrim command above, try to migrate collections one by one."
+if [ $RESUME_MODE ]; then
+    LOG $INF "Check for source resource is skipped due to -r, --resume parameter"
+else
+    if [[ ${RESC_NUM} -gt 1 ]] ; then
+        # resource is expected to exist on only ONE (compound) resource, if not ABORT
+        LOG $ERR "Collection ${COLL} is located on multiple resources (${SRC_RESC}) where only 1 is expected! Please investigate and fix this situation."
+        LOG $ERR "To remove the replica's from one of the resources, use the following command \n\n    itrim -r -M -v -S <resource_of_replica_to_be_deleted> ${COLL}\n"
+        LOG $ERR "If the collection is put offline, pull the whole collection online before migrating the collection\n"
+        if [[ -z ${COLL_NAME} ]]; then
+            LOG $INF "It looks like you tried to migrate an entire project recursively. Multiple resources within a project are likely to occur. Instead of using the itrim command above, try to migrate collections one by one."
+        fi
+        LOG $ERR "Script will be aborted!" ${IRODS_ERROR}
     fi
-    LOG $ERR "Script will be aborted!" ${IRODS_ERROR}
 fi
 
 # check if source and target resource are the same
@@ -430,7 +443,23 @@ fi
 #      c - close collection
 #
 if $CONFIRM ; then read -r -n 1 -p "  --> press any key to start calculating checksums"; fi
-create_checksums
+
+if $RESUME_MODE; then
+    QUERY="SELECT DATA_RESC_NAME, count(DATA_SIZE), sum(DATA_SIZE), max(DATA_SIZE) WHERE COLL_NAME like '${COLL}%' AND DATA_CHECKSUM = ''"
+    FORMAT="%-20s  %8d files  total: %15d bytes   largest file: %d bytes"
+    LOG $DBG "iquest --no-page \"${FORMAT}\" \"${QUERY}\""
+    NO_CHECKSUMS=$(iquest --no-page "${FORMAT}" "${QUERY}")
+    LOG $DBG "Files without checksums for %{COLL}:"
+    LOG $DBG "$NO_CHECKSUMS"
+    if [[ "$NO_CHECKSUMS" == "CAT_NO_ROWS_FOUND: Nothing was found matching your query" ]]; then
+        DO_CHECKSUMS=false
+        LOG $INF "Checksumming skipped due to option -r | --resume"
+    fi
+fi
+
+if $DO_CHECKSUMS; then
+  create_checksums
+fi
 
 
 #
@@ -440,18 +469,19 @@ create_checksums
 #
 #      info: grep -v inverts the match and returns all NON-matching lines
 
-LOG $DBG "Verifying checksums and number of replicas"
-## CHANGED: Since iRODS 4.2 DATA_RESC_NAME return leave resource instead of composing resource
-## As we already know that all datafiles are on the same composing resource, the name of the
-## resource is superfluous and can be removed
-QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where COLL_NAME like '${COLL}%'"
-LOG $DBG "iquest --no-page \"%2d %-52s %12d %s/%s\" \"${QUERY}\" \| grep -v \"^ 2\""
-ISSUES=$(iquest --no-page "%2d %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
+if $DO_CHECKSUMS; then
+    LOG $DBG "Verifying checksums and number of replicas"
+    ## CHANGED: Since iRODS 4.2 DATA_RESC_NAME return leave resource instead of composing resource
+    ## As we already know that all datafiles are on the same composing resource, the name of the
+    ## resource is superfluous and can be removed
+    QUERY="select count(DATA_NAME), DATA_CHECKSUM, DATA_SIZE, COLL_NAME, DATA_NAME where COLL_NAME like '${COLL}%'"
+    LOG $DBG "iquest --no-page \"%2d %-52s %12d %s/%s\" \"${QUERY}\" \| grep -v \"^ 2\""
+    ISSUES=$(iquest --no-page "%2d %-52s %12d %s/%s" "${QUERY}" | grep -v "^ 2")
 
-if [[ -n "${ISSUES}" ]]; then
-  LOG $ERR "Errors encountered in checksums or number of replicas. Aborting before migration. Details: \n${ISSUES}" ${CHECKSUM_ERROR}
+  if [[ -n "${ISSUES}" ]]; then
+    LOG $ERR "Errors encountered in checksums or number of replicas. Aborting before migration. Details: \n${ISSUES}" ${CHECKSUM_ERROR}
+  fi
 fi
-
 
 #
 #   3 - REPLICATE COLLECTION TO TARGET RESOURCE
