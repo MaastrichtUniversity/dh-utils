@@ -26,11 +26,8 @@ do
 				echo "- Add data steward AVU on $datasteward"
 				imeta set -u $datasteward specialty data-steward
 				
-				echo "- Give viewer permission to $datasteward recursively on $projectID and its collections"
-				irule -s -F /rules/projects/changeProjectPermissions.r *project="$projectID" *users="$datasteward:read"
-
-				echo "- Change to manager permission for $datasteward on $projectID"
-				ichmod own $datasteward /nlmumc/projects/$projectID
+				echo "- Give manager permission to $datasteward recursively on $projectID and its collections"
+				irule -s -F /rules/projects/changeProjectPermissions.r *project="$projectID" *users="$datasteward:own"		
 			fi;
 				
 		fi
