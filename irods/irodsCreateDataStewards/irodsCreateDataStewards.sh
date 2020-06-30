@@ -26,7 +26,7 @@ do
 				echo "- Add data steward AVU on $datasteward"
 				imeta set -u $datasteward specialty data-steward
 				
-				echo "- Give manager permission to $datasteward recursively on $projectID and its collections"
+				echo "- Give manager permission to $datasteward on $projectID and recursive READ on its collections"
 				irule -s -F /rules/projects/changeProjectPermissions.r *project="$projectID" *users="$datasteward:own"		
 			fi;
 				
