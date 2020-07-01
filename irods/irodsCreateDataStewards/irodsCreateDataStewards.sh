@@ -2,7 +2,7 @@
 
 mode=$1
 input=$2
-while IFS=, read -r project pi datasteward
+while IFS=, read -r project pi datasteward displayname
 do
 		if [[ $project =~ ^\/nlmumc\/projects\/P[0-9]{9}$ ]] ;	then
 			projectID="$(cut -d'/' -f4 <<<"$project")"
@@ -10,7 +10,7 @@ do
 			
 			if [[ $1 == "--dry-run" ]]; then
 				echo "- List data steward AVU on $projectID"
-				imeta ls -C $project datasteward
+				imeta ls -C $project dataSteward
 				
 				echo "- List data steward AVU on $datasteward"
 				imeta ls -u $datasteward specialty
@@ -20,10 +20,10 @@ do
 			fi;
     
 			if [[ $1 == "--commit" ]]; then
-				echo "- Add data steward AVU on $projectID"
-				imeta set -C $project datasteward $datasteward
+				echo "- Set data steward AVU on $projectID"
+				imeta set -C $project dataSteward $datasteward
 				
-				echo "- Add data steward AVU on $datasteward"
+				echo "- Set data steward AVU on $datasteward"
 				imeta set -u $datasteward specialty data-steward
 				
 				echo "- Give manager permission to $datasteward on $projectID and recursive READ on its collections"
