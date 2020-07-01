@@ -15,6 +15,9 @@ do
 				echo "- List data steward AVU on $datasteward"
 				imeta ls -u $datasteward specialty
 				
+				echo "- List data steward AVU on $datasteward"
+				imeta ls -u $datasteward displayName
+
 				echo "- List ACL on $projectID"
 				ils -A $project
 			fi;
@@ -26,6 +29,9 @@ do
 				echo "- Set data steward AVU on $datasteward"
 				imeta set -u $datasteward specialty data-steward
 				
+				echo "- Set display name AVU on $datasteward"
+				imeta set -u $datasteward displayName "$displayname"
+
 				echo "- Give manager permission to $datasteward on $projectID and recursive READ on its collections"
 				irule -s -F /rules/projects/changeProjectPermissions.r *project="$projectID" *users="$datasteward:own"		
 			fi;
