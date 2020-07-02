@@ -8,10 +8,11 @@
 
 # Usage
 1. Get a working _rodsadmin_ connection through `iinit` to iRODS server of choice.
-1. The script take as input a DataStewards.csv file. The csv file must contain 3 columns comma separated:
+1. The script take as input a DataStewards.csv file. The csv file must contain 4 columns comma separated:
 	* the project full path
 	* the principal investigator user name
-	* the data steward user name 
+	* the data steward user name
+	* the data stewards displayname (First and Last name)
     
     Examples: 
     ```
