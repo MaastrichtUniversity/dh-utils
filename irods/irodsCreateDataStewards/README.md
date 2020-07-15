@@ -16,8 +16,8 @@
     
     Examples: 
     ```
-    /nlmumc/projects/P000000010,x.y@maastrichtuniversity.nl,y.z@maastrichtuniversity.nl 
-    /nlmumc/projects/P000000011,a.b@maastrichtuniversity.nl,c.d@maastrichtuniversity.nl
+    /nlmumc/projects/P000000010,x.y@maastrichtuniversity.nl,y.z@maastrichtuniversity.nl,Yannick Zorger 
+    /nlmumc/projects/P000000011,a.b@maastrichtuniversity.nl,c.d@maastrichtuniversity.nl,Cornelis Dubbeldrank
     ```
 1. **[DRY-RUN]** Test the script and review the output with
     `./irodsCreateDataStewards.sh --dry-run DataStewards.csv`
