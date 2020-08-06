@@ -9,7 +9,7 @@
 # Usage
 1. Get a working _rodsadmin_ connection through `iinit` to iRODS server of choice.
 2. **[DRY-RUN]** Test the script and review the output with
-    `../irodsSetAvuForAllProjects.sh --dry-run archiveDestinationResource arcRescSURF01`
+    `./irodsSetAvuForAllProjects.sh --dry-run archiveDestinationResource arcRescSURF01`
 3. **[COMMIT]** Execute the changes with
-    `../irodsSetAvuForAllProjects.sh --commit archiveDestinationResource arcRescSURF01`
+    `./irodsSetAvuForAllProjects.sh --commit archiveDestinationResource arcRescSURF01`
 
