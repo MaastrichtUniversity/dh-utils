@@ -81,9 +81,8 @@ do
          :
       fi
    done< <(iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project'" )
-   [[ DRY_RUN -ne true ]] && irule -s -F changeProjectPermissions.r *project="$projectName" *users="$permissionsString"
-   echo "  irule -s -F changeProjectPermissions.r *project=\"$projectName\" *users=\"$permissionsString\""
-   unset permissionsString
+   [[ !DRY_RUN ]] && irule -s -F /rules/projects/changeProjectPermissions.r *project="$projectName" *users="$permissionsString"
+   echo "  irule -s -F /rules/projects/changeProjectPermissions.r *project=\"$projectName\" *users=\"$permissionsString\""
 done 
 
 
