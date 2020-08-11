@@ -1,16 +1,28 @@
 #!/usr/bin/env bash
 
-#echo "iterate through ALL Collections"
-#ils -r / | grep "C-"  | cut -d " " -f 4 | while read -r collection_path ; do
-#   echo "Collection: $collection_path"
-#   ils -A "$collection_path" | grep "ACL" 
-#done
+MAPPING_FILE='users.csv'
+DRY_RUN=true
 
-#assoziativ array of user ids to old and new name, could be loaded from json file
+[[ "$#" -ge 1 ]] && MAPPING_FILE=$1
+[[ "$#" -ge 2 ]] && DRY_RUN=$2
+
+echo "duplicating all users found in $MAPPING_FILE, dry-run=$DRY_RUN"
+echo ""
+echo "reading in mapping-file..."
+#assoziativ array of user ids to old and new name, could be loaded from file
 declare -A USER_NAME_MAP
-USER_NAME_MAP=( ['g.tria@maastrichtuniversity.nl#nlmumc']="g.tria@DUPLICATE.sram" ['jonathan.melius@maastrichtuniversity.nl#nlmumc']="jonathan.melius@DUPLICATE.sram" ["o.palmen@maastrichtuniversity.nl#nlmumc"]="o.palmen@DUPLICATE.sram" ["p.vanschayck@maastrichtuniversity.nl#nlmumc"]="p.vanschayck@DUPLICATE.sram" ["rbg.ravelli@maastrichtuniversity.nl#nlmumc"]="rgb.ravelli@DUPLICATE.sram")
+#USER_NAME_MAP=( ['g.tria@maastrichtuniversity.nl#nlmumc']="g.tria@DUPLICATE.sram" ['jonathan.melius@maastrichtuniversity.nl#nlmumc']="jonathan.melius@DUPLICATE.sram" )
+while read current_name new_name; do
+  #echo "  - $current_name $new_name"
+  USER_NAME_MAP["$current_name"]="$new_name"
+done < <(grep -v "^;" $MAPPING_FILE)
 
+##debug line: shows content of the assoziative array
+##for x in "${!USER_NAME_MAP[@]}"; do printf "[%q]=%q\n" "$x" "${USER_NAME_MAP[$x]}" ; done
+
+#second assoziative array, needed because iquest on collections won't give us the user name for an ACL...
 declare -A USER_ID_MAP
+echo "-----------------"
 
 
 #for all existing users, check if the user should be duplicated,
@@ -25,44 +37,53 @@ do
       USER_ID_MAP[$userId]="$user"
       #check if user already exists!
       if iadmin lu $newUserName | grep 'No rows found'; then
-         echo " * NEW USER $newUserName"
+         echo " * iadmin mkuser $newUserName rodsuser"
          #could still fail, if there is still a home collection for the user!
          iadmin mkuser $newUserName rodsuser
          iuserinfo $user | grep "member of group" | cut -d " " -f 4 | while read -r group ; do
            #we need to add the zone to the group, because the username of 'iadmin lu' contains the zone as well.
            if [[ "$group#nlmumc" != "$user" && "$group" != "public" ]]; then
-             iadmin atg "$group" "$newUserName"
-              echo " ** ATG $newUserName --> $group"
+             [[ !DRY_RUN ]] && iadmin atg "$group" "$newUserName"
+             echo " ** iadmin atg $group $newUserName"
            fi
          done
       fi
    fi
 done
 
-echo ""
-echo "mapping of old userIds to userNames (for duplicated users):"
-for x in "${!USER_ID_MAP[@]}"; do printf "[%q]=%q\n" "$x" "${USER_ID_MAP[$x]}" ; done
+#echo ""
+#echo "mapping of old userIds to userNames (for duplicated users):"
+#for x in "${!USER_ID_MAP[@]}"; do printf "[%q]=%q\n" "$x" "${USER_ID_MAP[$x]}" ; done
 echo "-----------------"
+
 
 
 #this will go through all collections
 echo "going through all collections, granting user rights for duplicated users..."
-iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_TYPE, COLL_ACCESS_NAME"  | while  mapfile -t -n 5 blocks && ((${#blocks[@]})); do
-   collection=${blocks[0]##* = }
-   userId=${blocks[1]##* = }
-   accessName=${blocks[3]##* = }
-
-   #echo "collection: $collection"
-   #iquest "select USER_NAME where USER_ID = '$userId'"
-   if [ ${USER_ID_MAP[$userId]+_} ]; then
-     oldUserName=${USER_ID_MAP[$userId]}
-     newUserName=${USER_NAME_MAP[$oldUserName]}
-     echo "  - $collection ($oldUserName/$userId) granting: $newUserName ${accessName}"
-     ichmod -M "${accessName}" "$newUserName" "$collection"
-   else
-     #echo "  - ignoring $collection (userId: $userId)"
-     :
-   fi
+for project in  $(iquest "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'" | grep "COLL_NAME" | cut -d" " -f 3)
+do 
+   projectName=${project##*/}
+   echo " * Project: $project   $projectName"
+   permissionsString=""
+   #{ iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project'"  | while mapfile -t -n 4 blocks && ((${#blocks[@]}));} do
+   while  mapfile -t -n 4 blocks && ((${#blocks[@]})); 
+   do
+      collection=${blocks[0]##* = }
+      userId=${blocks[1]##* = }
+      accessName=${blocks[2]##* = }
+      if [ ${USER_ID_MAP[$userId]+_} ]; then
+         oldUserName=${USER_ID_MAP[$userId]}
+         newUserName=${USER_NAME_MAP[$oldUserName]}
+#        ichmod -M "${accessName}" "$newUserName" "$collection"
+         echo " ** $newUserName $accessName"
+         permissionsString+="$newUserName:$accessName "
+      else
+         :
+      fi
+   done< <(iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project'" )
+   [[ DRY_RUN -ne true ]] && irule -s -F changeProjectPermissions.r *project="$projectName" *users="$permissionsString"
+   echo "  irule -s -F changeProjectPermissions.r *project=\"$projectName\" *users=\"$permissionsString\""
+   unset permissionsString
 done 
 
 

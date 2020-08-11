@@ -1,0 +1,30 @@
+;mapping file containing current irods-user and corresponding new user-name
+;The current user-name has to be postfixed wth the irods zone, e.g.: user#nlnumc,
+;the new name mast not contain the zone.
+;lines can be excluded by placing a semicolon as the first character
+;
+;created by:
+;  iadmin lu | grep -v "@" | sort | sed -r 's/(\S+)/\1\t\1/g' > users.csv
+;  iadmin lu | grep "@" | sort | sed -r 's/(\S+)/\1\t\1/g' >> users.csv
+;
+;
+;rods#nlmumc	rods
+;service-disqover#nlmumc	service-disqover
+;service-dropzones#nlmumc	service-dropzones
+;service-mdl#nlmumc	service-mdl
+;service-pid#nlmumc	service-pid
+;service-surfarchive#nlmumc	service-surfarchive
+d.theunissen@maastrichtuniversity.nl#nlmumc	d.theunissen@maastrichtuniversity.datahub.sram.surf.nl
+delnoy@maastrichtuniversity.nl#nlmumc	delnoy@maastrichtuniversity.datahub.sram.surf.nl
+g.tria@maastrichtuniversity.nl#nlmumc	g.tria@maastrichtuniversity.datahub.sram.surf.nl
+jonathan.melius@maastrichtuniversity.nl#nlmumc	jonathan.melius@maastrichtuniversity.datahub.sram.surf.nl
+k.heinen@maastrichtuniversity.nl#nlmumc	k.heinen@maastrichtuniversity.datahub.sram.surf.nl
+m.coonen@maastrichtuniversity.nl#nlmumc	m.coonen@maastrichtuniversity.datahub.sram.surf.nl
+o.palmen@maastrichtuniversity.nl#nlmumc	o.palmen@maastrichtuniversity.datahub.sram.surf.nl
+p.ahles@maastrichtuniversity.nl#nlmumc	p.ahles@maastrichtuniversity.datahub.sram.surf.nl
+p.suppers@maastrichtuniversity.nl#nlmumc	p.suppers@maastrichtuniversity.datahub.sram.surf.nl
+p.vanschayck@maastrichtuniversity.nl#nlmumc	p.vanschayck@maastrichtuniversity.datahub.sram.surf.nl
+r.brecheisen@maastrichtuniversity.nl#nlmumc	r.brecheisen@maastrichtuniversity.datahub.sram.surf.nl
+rbg.ravelli@maastrichtuniversity.nl#nlmumc	rbg.ravelli@maastrichtuniversity.datahub.sram.surf.nl
+rick.voncken@scannexus.nl#nlmumc	rick.voncken@scannexus.datahub.sram.surf.nl
+s.nijhuis@maastrichtuniversity.nl#nlmumc	s.nijhuis@maastrichtuniversity.datahub.sram.surf.nl
