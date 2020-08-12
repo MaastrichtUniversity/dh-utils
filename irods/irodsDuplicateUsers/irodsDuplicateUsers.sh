@@ -71,6 +71,9 @@ do
       collection=${blocks[0]##* = }
       userId=${blocks[1]##* = }
       accessName=${blocks[2]##* = }
+      [[ "$accessName" == "modify object" ]] && accessName="write" 
+      [[ "#accessName" == "read object" ]] && accessName="read"
+
       if [ ${USER_ID_MAP[$userId]+_} ]; then
          oldUserName=${USER_ID_MAP[$userId]}
          newUserName=${USER_NAME_MAP[$oldUserName]}
