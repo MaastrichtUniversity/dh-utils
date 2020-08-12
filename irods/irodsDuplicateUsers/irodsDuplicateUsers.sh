@@ -36,6 +36,7 @@ do
       newUserName=${USER_NAME_MAP["$user"]}
       USER_ID_MAP[$userId]="$user"
       #check if user already exists!
+      #the output "No rows found" is expected and shows the new user can be safely created!
       if iadmin lu $newUserName | grep 'No rows found'; then
          echo " * iadmin mkuser $newUserName rodsuser"
          #could still fail, if there is still a home collection for the user!
@@ -72,7 +73,7 @@ do
       userId=${blocks[1]##* = }
       accessName=${blocks[2]##* = }
       [[ "$accessName" == "modify object" ]] && accessName="write" 
-      [[ "#accessName" == "read object" ]] && accessName="read"
+      [[ "$accessName" == "read object" ]] && accessName="read"
 
       if [ ${USER_ID_MAP[$userId]+_} ]; then
          oldUserName=${USER_ID_MAP[$userId]}
