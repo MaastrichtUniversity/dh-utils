@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-MAPPING_FILE='users.csv'
+MAPPING_FILE='users.txt'
 DRY_RUN=true
 
 [[ "$#" -ge 1 ]] && MAPPING_FILE=$1
