@@ -41,7 +41,7 @@ do
       if iadmin lu $newUserName | grep 'No rows found'; then
          echo " * iadmin mkuser $newUserName rodsuser"
          #could still fail, if there is still a home collection for the user!
-         iadmin mkuser $newUserName rodsuser
+         [[ !DRY_RUN ]] iadmin mkuser $newUserName rodsuser
          iuserinfo $user | grep "member of group" | cut -d " " -f 4 | while read -r group ; do
            # Skip adding the new user to the groups 'public' and his homegroup, as that is done automatically upon user creation.
            #For the conditional below, we need to append the zone to the group, because the username of 'iadmin lu' contains the zone as well.
