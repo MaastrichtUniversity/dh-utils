@@ -25,14 +25,15 @@ declare -A USER_ID_MAP
 echo "-----------------"
 
 
-#for all existing users, check if the user should be duplicated,
-#reate the new users, and add it to the same groups
-echo "create new users with same group memberships..."
+echo "Create new users with same group memberships..."
+
+# Looping over all existing users: check if the user should be duplicated
 for user in $(iadmin lu)
 do
    userId=$(iadmin lu $user | grep "user_id" | cut -d " " -f 2)
 #   echo "   existing user: $user  -> $userId"
    if [ ${USER_NAME_MAP["$user"]+_} ]; then
+      # Create the new users, and add it to the same groups
       newUserName=${USER_NAME_MAP["$user"]}
       USER_ID_MAP[$userId]="$user"
       #check if user already exists!
@@ -42,7 +43,8 @@ do
          #could still fail, if there is still a home collection for the user!
          iadmin mkuser $newUserName rodsuser
          iuserinfo $user | grep "member of group" | cut -d " " -f 4 | while read -r group ; do
-           #we need to add the zone to the group, because the username of 'iadmin lu' contains the zone as well.
+           # Skip adding the new user to the groups 'public' and his homegroup, as that is done automatically upon user creation.
+           #For the conditional below, we need to append the zone to the group, because the username of 'iadmin lu' contains the zone as well.
            if [[ "$group#nlmumc" != "$user" && "$group" != "public" ]]; then
              [[ !DRY_RUN ]] && iadmin atg "$group" "$newUserName"
              echo " ** iadmin atg $group $newUserName"
@@ -59,8 +61,8 @@ echo "-----------------"
 
 
 
-#this will go through all collections
-echo "going through all collections, granting user rights for duplicated users..."
+# Looping over all projects: run the changePermissions rule for the new users
+echo "Granting user permissions for new users on all projects..."
 for project in  $(iquest "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'" | grep "COLL_NAME" | cut -d" " -f 3)
 do 
    projectName=${project##*/}
