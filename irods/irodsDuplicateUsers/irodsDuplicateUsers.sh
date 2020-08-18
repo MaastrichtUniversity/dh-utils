@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+### Comments after review of DHS-620 ###
+# These open issues should be looked into when leveraging this script to production in a subsequent story
+# TODO: Check if the script accepts a tab- (instead of space-)separated users.txt file as input. I assume that in production, we will create this input file using a spreadsheet application and save it as tab delimited.
+# TODO: Call 'changeProjectPermissions' from the rulebase instead of the file in /rules/... This makes development easier as you are able to run it outside of the irods container. Otherwise, mention this dependency (/rules folder) in this script's README.
+# TODO: Test scalability and performance of this script on a production database. See if iRODS can cope with a large amount of 'changeProjectPermissions' rules in the delay queue.
+
 MAPPING_FILE='users.txt'
 DRY_RUN=true
 
