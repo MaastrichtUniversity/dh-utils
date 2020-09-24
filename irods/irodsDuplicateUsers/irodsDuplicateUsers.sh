@@ -47,12 +47,12 @@ do
       if iadmin lu $newUserName | grep 'No rows found'; then
          echo " * iadmin mkuser $newUserName rodsuser"
          #could still fail, if there is still a home collection for the user!
-         [[ !DRY_RUN ]] iadmin mkuser $newUserName rodsuser
+         [[ ! DRY_RUN ]] && iadmin mkuser $newUserName rodsuser
          iuserinfo $user | grep "member of group" | cut -d " " -f 4 | while read -r group ; do
            # Skip adding the new user to the groups 'public' and his homegroup, as that is done automatically upon user creation.
            #For the conditional below, we need to append the zone to the group, because the username of 'iadmin lu' contains the zone as well.
            if [[ "$group#nlmumc" != "$user" && "$group" != "public" ]]; then
-             [[ !DRY_RUN ]] && iadmin atg "$group" "$newUserName"
+             [[ ! DRY_RUN ]] && iadmin atg "$group" "$newUserName"
              echo " ** iadmin atg $group $newUserName"
            fi
          done
@@ -93,7 +93,7 @@ do
          :
       fi
    done< <(iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project'" )
-   [[ !DRY_RUN ]] && irule -s -F /rules/projects/changeProjectPermissions.r *project="$projectName" *users="$permissionsString"
+   [[ ! DRY_RUN ]] && irule -s -F /rules/projects/changeProjectPermissions.r *project="$projectName" *users="$permissionsString"
    echo "  irule -s -F /rules/projects/changeProjectPermissions.r *project=\"$projectName\" *users=\"$permissionsString\""
 done 
 
