@@ -14,5 +14,4 @@
 ;service-mdl#nlmumc	service-mdl
 ;service-pid#nlmumc	service-pid
 ;service-surfarchive#nlmumc	service-surfarchive
-d.theunissen@maastrichtuniversity.nl#nlmumc d.theunissen@maastrichtuniversity.datahub.sram.surf.nl
-
+d.theunissen@maastrichtuniversity.nl#nlmumc dtheuniss
