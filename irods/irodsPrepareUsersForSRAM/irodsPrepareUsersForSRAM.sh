@@ -13,12 +13,12 @@ do
     if [[ $i == service-* ]] ; then
         echo "Adding AVU ldapSync false to service user $i"
         if [[ $1 == "--commit" ]]; then
-           imeta add -u "${i}" "ldapSync" "false"
+           imeta set -u "${i}" "ldapSync" "false"
         fi;
     else
       echo "Adding AVU pendingSramInvite user $i"
         if [[ $1 == "--commit" ]]; then
-           imeta add -u "${i}" "pendingSramInvite" " "
+           imeta set -u "${i}" "pendingSramInvite" "true"
         fi;
 
     fi;
