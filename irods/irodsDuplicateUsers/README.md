@@ -23,22 +23,43 @@
    # The first command will show special users, those should probably be removed from the file!)
    ```
 
-3. Call the script with the optional parameters:
+3. Call the script with the following parameters:
    ```
-   ./irodsDuplicateUsers.sh [file] [dryrun] 
-   ```
-   
-   * file is the generated txt-file (defaults to users.txt)
-   * dryrun is a boolean (defaults to true)
-   
-   ```
-   e.g.: 
-     ./irodsDuplicateUsers.sh
-     ./irodsDuplicateUsers.sh users.txt true   
-   ```
-3. The new users will be created, having the same group memberships as the old users.
+    ./irodsDuplicateUsers.sh
+    
+    -m 
+    Choose the mode in which the scipt works 
+    file for file mode. Use input file for mapping
+    user for single user mode. Use single user as input for mapping
+    
+    -f 
+    Choose the mapping file. To use with the file mode
+    defaults to users.txt
+    
+    -d 
+    Choose to use dry-run or not. Options are true or false
+    defaults to true
+    
+    -u 
+    Choose the input username that will be duplicated. To use with the user mode
+    
+    -n 
+    Choose the new username. To use with the user mode
 
-4. All project collections will be traversed, for each collection changeProjectPermissions.r is called,
+   ```
+   
+   Examples
+   ```
+    ./irodsDuplicateUsers.sh -m "file" 
+    ./irodsDuplicateUsers.sh -m "file" -f "users.txt" 
+    ./irodsDuplicateUsers.sh -m "file" -f "users.txt" -d "false"
+    
+    ./irodsDuplicateUsers.sh -m "user" -u "m.coonen@maastrichtuniversity.nl#nlmumc" -n "m.coonen@maastrichtuniversity.datahub.sram.surf.nl"
+    ./irodsDuplicateUsers.sh -m "user" -u "m.coonen@maastrichtuniversity.nl#nlmumc" -n "m.coonen@maastrichtuniversity.datahub.sram.surf.nl" -d "false" 
+   ```
+4. The new users will be created, having the same group memberships as the old users.
+
+5. All project collections will be traversed, for each collection changeProjectPermissions.r is called,
    with the new usernames and the corresponding access rights of the old users.
 
 
