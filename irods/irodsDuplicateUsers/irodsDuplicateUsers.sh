@@ -84,6 +84,7 @@ echo "-----------------"
 
 
 echo "Create new users with same group memberships..."
+count=0
 
 # Looping over all existing users: check if the user should be duplicated
 for user in $(iadmin lu)
@@ -97,7 +98,7 @@ do
       #check if user already exists!
       #the output "No rows found" is expected and shows the new user can be safely created!
       if iadmin lu $newUserName | grep 'No rows found'; then
-         echo " * iadmin mkuser $newUserName rodsuser"
+         echo " * iadmin mkuser $newUserName rodsuser" && count=$((count + 1))
          #could still fail, if there is still a home collection for the user!
          [[ $DRY_RUN == "false" ]] && iadmin mkuser $newUserName rodsuser
          iuserinfo $user | grep "member of group" | cut -d " " -f 4 | while read -r group ; do
@@ -105,12 +106,15 @@ do
            #For the conditional below, we need to append the zone to the group, because the username of 'iadmin lu' contains the zone as well.
            if [[ "$group#nlmumc" != "$user" && "$group" != "public" ]]; then
              [[ $DRY_RUN == "false" ]] && iadmin atg "$group" "$newUserName"
-             echo " ** iadmin atg $group $newUserName"
+             echo "  - iadmin atg $group $newUserName"
            fi
          done
       fi
    fi
 done
+
+# Help to check if the new user(s) have been created
+echo "Number of new users created: $count"
 
 #echo ""
 #echo "mapping of old userIds to userNames (for duplicated users):"
@@ -139,13 +143,13 @@ do
          oldUserName=${USER_ID_MAP[$userId]}
          newUserName=${USER_NAME_MAP[$oldUserName]}
 #        ichmod -M "${accessName}" "$newUserName" "$collection"
-         echo " ** $newUserName $accessName"
+         echo "  - $newUserName $accessName"
          permissionsString+="$newUserName:$accessName "
       else
          :
       fi
    done< <(iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project'" )
     [[ $DRY_RUN == "false" ]] && irule "changeProjectPermissions(*project, '$permissionsString')" *project="$projectName" ruleExecOut
-    echo "irule \"changeProjectPermissions(*project, '$permissionsString')\" *project=\"$projectName\" ruleExecOut"
+    echo "  - irule \"changeProjectPermissions(*project, '$permissionsString')\" *project=\"$projectName\" ruleExecOut"
 done
 
