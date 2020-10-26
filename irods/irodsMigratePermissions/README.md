@@ -1,11 +1,10 @@
-# irodsDuplicateUsers
+# irodsMigratePermissions
 
-* **Name:** irodsDuplicateUsers
-* **Description**: Based on a mapping file, this script creates new users and applies the same project permissions (ACLs) 
-    as the old user had. This was a proof of concept of renaming users. Eventually only the 
-    permission migration was used. See irodsMigratePermissions. 
-* **Developer:** Jan-Erek Thiede, DataHub Maastricht University
-* **License:** ?
+* **Name:** irodsMigratePermissions
+* **Description**: Based on a mapping file, this script applies the same project permissions (ACLs) 
+    as the old user or group had.
+* **Developer:** Jan-Erek Thiede, Paul van Schayck, Daniel Theunissen
+* **License:** Apache
 * **Depends on:** iRODS icommands
 
 # Usage
@@ -27,7 +26,7 @@
 
 3. Call the script with the following parameters:
    ```
-    ./irodsDuplicateUsers.sh
+    ./irodsMigratePermissions.sh
     
     -m 
     Choose the mode in which the scipt works 
@@ -52,15 +51,13 @@
    
    Examples
    ```
-    ./irodsDuplicateUsers.sh -m "file" 
-    ./irodsDuplicateUsers.sh -m "file" -f "users.txt" 
-    ./irodsDuplicateUsers.sh -m "file" -f "users.txt" -d "false"
+    ./irodsMigratePermissions.sh -m "file" 
+    ./irodsMigratePermissions.sh -m "file" -f "users.txt" 
+    ./irodsMigratePermissions.sh -m "file" -f "users.txt" -d "false"
     
-    ./irodsDuplicateUsers.sh -m "user" -u "m.coonen@maastrichtuniversity.nl#nlmumc" -n "m.coonen@maastrichtuniversity.datahub.sram.surf.nl"
-    ./irodsDuplicateUsers.sh -m "user" -u "m.coonen@maastrichtuniversity.nl#nlmumc" -n "m.coonen@maastrichtuniversity.datahub.sram.surf.nl" -d "false" 
+    ./irodsMigratePermissions.sh -m "user" -u "m.coonen@maastrichtuniversity.nl#nlmumc" -n "m.coonen@maastrichtuniversity.datahub.sram.surf.nl"
+    ./irodsMigratePermissions.sh -m "user" -u "m.coonen@maastrichtuniversity.nl#nlmumc" -n "m.coonen@maastrichtuniversity.datahub.sram.surf.nl" -d "false" 
    ```
-4. The new users will be created, having the same group memberships as the old users.
-
 5. All project collections will be traversed, for each collection changeProjectPermissions.r is called,
    with the new usernames and the corresponding access rights of the old users.
 

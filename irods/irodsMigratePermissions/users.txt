@@ -1,0 +1,17 @@
+;mapping file containing current irods user or group and corresponding new name
+;The current name has to be postfixed wth the irods zone, e.g.: user#nlnumc,
+;the new name must not contain the zone.
+;lines can be excluded by placing a semicolon as the first character
+;
+;created by:
+;  iadmin lu | grep -v "@" | sort | sed -r 's/(\S+)/\1\t\1/g' > users.csv
+;  iadmin lu | grep "@" | sort | sed -r 's/(\S+)/\1\t\1/g' >> users.csv
+;
+;
+;rods#nlmumc	rods
+;service-disqover#nlmumc	service-disqover
+;service-dropzones#nlmumc	service-dropzones
+;service-mdl#nlmumc	service-mdl
+;service-pid#nlmumc	service-pid
+;service-surfarchive#nlmumc	service-surfarchive
+d.theunissen@maastrichtuniversity.nl#nlmumc dtheuniss
