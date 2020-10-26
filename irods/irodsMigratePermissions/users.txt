@@ -14,4 +14,4 @@
 ;service-mdl#nlmumc	service-mdl
 ;service-pid#nlmumc	service-pid
 ;service-surfarchive#nlmumc	service-surfarchive
-d.theunissen@maastrichtuniversity.nl#nlmumc dtheuniss
+opalmen#nlmumc foobar

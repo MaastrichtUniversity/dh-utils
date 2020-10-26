@@ -76,10 +76,24 @@ else
    exit 1
 fi
 
-##debug line: shows content of the associative array
-##for x in "${!USER_NAME_MAP[@]}"; do printf "[%q]=%q\n" "$x" "${USER_NAME_MAP[$x]}" ; done
+# debug line: shows content of the associative array USER_NAME_MAP
+#for x in "${!USER_NAME_MAP[@]}"; do printf "[%q]=%q\n" "$x" "${USER_NAME_MAP[$x]}" ; done
 
 declare -A USER_ID_MAP
+
+for user in "${!USER_NAME_MAP[@]}";
+do
+   userId=$(iadmin lu $user | grep "user_id" | cut -d " " -f 2)
+   if [ ${USER_NAME_MAP["$user"]+_} ]; then
+      # Create the new users, and add it to the same groups
+      newUserName=${USER_NAME_MAP["$user"]}
+      USER_ID_MAP[$userId]="$user"
+   fi
+done
+
+# debug line: shows content of the associative array USER_ID_MAP
+#for x in "${!USER_ID_MAP[@]}"; do printf "[%q]=%q\n" "$x" "${USER_ID_MAP[$x]}" ; done
+
 echo "-----------------"
 
 # Looping over all projects: run the changePermissions rule for the new users
@@ -89,7 +103,7 @@ do
    projectName=${project##*/}
    echo " * Project: $project   $projectName"
    permissionsString=""
-   #{ iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project'"  | while mapfile -t -n 4 blocks && ((${#blocks[@]}));} do
+
    while mapfile -t -n 4 blocks && ((${#blocks[@]}));
    do
       # collection=${blocks[0]##* = }
@@ -102,12 +116,14 @@ do
          oldUserName=${USER_ID_MAP[$userId]}
          newUserName=${USER_NAME_MAP[$oldUserName]}
          echo "  - $newUserName $accessName"
-         permissionsString+="$newUserName:$accessName "
+         permissionsString+="$newUserName:$accessName $oldUserName:null "
       else
          :
       fi
    done< <(iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project'" )
+
     [[ $DRY_RUN == "false" ]] && irule "changeProjectPermissions(*project, '$permissionsString')" *project="$projectName" ruleExecOut
+
     echo "  - irule \"changeProjectPermissions(*project, '$permissionsString')\" *project=\"$projectName\" ruleExecOut"
 done
 
