@@ -1,7 +1,9 @@
 # irodsDuplicateUsers
 
 * **Name:** irodsDuplicateUsers
-* **Description**: Based on a mapping file, this script creates new users and applies the same project permissions (ACLs) as the old user had.
+* **Description**: Based on a mapping file, this script creates new users and applies the same project permissions (ACLs) 
+    as the old user had. This was a proof of concept of renaming users. Eventually only the 
+    permission migration was used. See irodsMigratePermissions. 
 * **Developer:** Jan-Erek Thiede, DataHub Maastricht University
 * **License:** ?
 * **Depends on:** iRODS icommands
