@@ -3,9 +3,10 @@
 ;the new name must not contain the zone.
 ;lines can be excluded by placing a semicolon as the first character
 ;
-;created by:
-;  iadmin lu | grep -v "@" | sort | sed -r 's/(\S+)/\1\t\1/g' > users.csv
-;  iadmin lu | grep "@" | sort | sed -r 's/(\S+)/\1\t\1/g' >> users.csv
+;Can be created  by:
+;  iadmin lu | grep -v "@" | sort | sed -r 's/(\S+)/\1\t\1/g' > mapping.txt
+;  iadmin lu | grep "@" | sort | sed -r 's/(\S+)/\1\t\1/g' >> mapping.txt
+;  iadmin lg >> mapping.txt
 ;
 ;
 ;rods#nlmumc	rods
@@ -15,3 +16,4 @@
 ;service-pid#nlmumc	service-pid
 ;service-surfarchive#nlmumc	service-surfarchive
 opalmen#nlmumc foobar
+SRAM-SCANNEXUS#nlmumc xyz

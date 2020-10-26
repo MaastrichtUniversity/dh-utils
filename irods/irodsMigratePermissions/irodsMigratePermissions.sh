@@ -7,7 +7,7 @@
 
 
 DRY_RUN=true
-MAPPING_FILE='users.txt'
+MAPPING_FILE='mapping.txt'
 
 while getopts ":m:f:d:u:n:" opt; do
   case $opt in
@@ -65,7 +65,6 @@ if [ $MODE == "file" ]; then
    echo ""
    echo "reading in mapping-file..."
    while read current_name new_name; do
-     #echo "  - $current_name $new_name"
      USER_NAME_MAP["$current_name"]="$new_name"
    done < <(grep -v "^;" $MAPPING_FILE)
 elif [ $MODE == "user" ] ; then
@@ -96,7 +95,7 @@ done
 
 echo "-----------------"
 
-# Looping over all projects: run the changePermissions rule for the new users
+# Looping over all projects: run the changePermissions rule for the users and groups
 echo "Granting user/group permissions for new users or groups on all projects..."
 for project in  $(iquest "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'" | grep "COLL_NAME" | cut -d" " -f 3)
 do
