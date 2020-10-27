@@ -4,6 +4,7 @@
 #
 # TODO: Test scalability and performance of this script on a production database. See if iRODS can cope with a large
 #       amount of 'changeProjectPermissions' rules in the delay queue.
+# TODO: If no permissions are changed (permissionsString is empty), we should not execute a irule
 
 
 DRY_RUN=true
