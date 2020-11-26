@@ -13,8 +13,8 @@
 2. Create a mapping file _mapping.txt_, containing a mapping of `current username` to `new user name` (space separated). Be aware 
    that the current username has to be in the format `user#zone`. Please find an example file below:
    ```
-   j.thiede@maastrichtuniversity.nl#nlmumc	j.thiede@maastrichtuniversity.datahub.sram.surf.nl
-   p.vanschayck@maastrichtuniversity#nlmumc p.vanschayck@maastrichtuniversity.datahub.sram.surf.nl
+   j.thiede@maastrichtuniversity.nl#nlmumc	jthiede
+   p.vanschayck@maastrichtuniversity#nlmumc pvanschayc
    ```
 
    You can create this file by using this two commands and then modify _mapping.txt_ as wished:
@@ -57,8 +57,8 @@
     ./irodsMigratePermissions.sh -m "file" -f "mapping.txt" 
     ./irodsMigratePermissions.sh -m "file" -f "mapping.txt" -d "false"
     
-    ./irodsMigratePermissions.sh -m "user" -u "m.coonen@maastrichtuniversity.nl#nlmumc" -n "m.coonen@maastrichtuniversity.datahub.sram.surf.nl"
-    ./irodsMigratePermissions.sh -m "user" -u "m.coonen@maastrichtuniversity.nl#nlmumc" -n "m.coonen@maastrichtuniversity.datahub.sram.surf.nl" -d "false" 
+    ./irodsMigratePermissions.sh -m "user" -u "m.coonen@maastrichtuniversity.nl#nlmumc" -n "mcoonen"
+    ./irodsMigratePermissions.sh -m "user" -u "m.coonen@maastrichtuniversity.nl#nlmumc" -n "mcoonen" -d "false" 
    ```
 5. All project collections will be traversed, for each collection changeProjectPermissions.r is called,
    with the new usernames/groupnames and the corresponding access rights of the old users or groups.
