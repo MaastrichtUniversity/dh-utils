@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<metadata>
+  <project>P000000004</project>
+  <title>Full filled xml</title>
+  <description>TEST</description>
+  <date>2017-04-13</date>
+  <factors>
+    <factor/>
+    <factor>1</factor>
+    <factor>2</factor>
+    <factor>3</factor>
+  </factors>
+  <organism id="ncbitaxon:http://purl.obolibrary.org/obo/NCBITaxon_9606">Homo sapiens</organism>
+  <organ id="efo:http://purl.obolibrary.org/obo/UBERON_0000310">breast</organ>
+  <technology id="ero:http://purl.obolibrary.org/obo/ERO_0000375">gavage</technology>
+  <article>
+    <pubmedID>1234</pubmedID>
+    <DOI/>
+    <authorList/>
+    <title/>
+    <journal/>
+    <issue/>
+    <year/>
+    <status/>
+  </article>
+  <article>
+    <pubmedID/>
+    <DOI/>
+    <authorList/>
+    <title/>
+    <journal/>
+    <issue/>
+    <year/>
+    <status/>
+  </article>
+  <creator>d.theunissen@maastrichtuniversity.nl</creator>
+  <contact>
+    <lastName>Theunissen</lastName>
+    <firstName/>
+    <midInitials/>
+    <email/>
+    <phone/>
+    <address/>
+    <affiliation/>
+    <role/>
+  </contact>
+  <contact>
+    <lastName>Daniel</lastName>
+    <firstName/>
+    <midInitials/>
+    <email/>
+    <phone/>
+    <address/>
+    <affiliation/>
+    <role/>
+  </contact>
+  <contact>
+    <lastName/>
+    <firstName/>
+    <midInitials/>
+    <email/>
+    <phone/>
+    <address/>
+    <affiliation/>
+    <role/>
+  </contact>
+  <protocol>
+    <name>Protocol</name>
+    <filename>1.docx</filename>
+  </protocol>
+</metadata>
