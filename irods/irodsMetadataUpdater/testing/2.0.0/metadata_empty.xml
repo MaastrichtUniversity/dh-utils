@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<metadata>
+  <project>P000000003</project>
+  <title>EPIC TEST</title>
+  <description></description>
+  <date>2017-03-30</date>
+  <factors>
+    <factor></factor>
+  </factors>
+  <organism id=""></organism>
+  <organ id=""></organ>
+  <technology id=""></technology>
+  <article>
+    <pubmedID></pubmedID>
+    <DOI></DOI>
+    <authorList></authorList>
+    <title></title>
+    <journal></journal>
+    <issue></issue>
+    <year></year>
+    <status></status>
+  </article>
+  <creator>d.theunissen@maastrichtuniversity.nl</creator>
+  <contact>
+    <lastName></lastName>
+    <firstName></firstName>
+    <midInitials></midInitials>
+    <email></email>
+    <phone></phone>
+    <address></address>
+    <affiliation></affiliation>
+    <role></role>
+  </contact>
+  <protocol>
+    <name></name>
+    <filename></filename>
+  </protocol>
+</metadata>
