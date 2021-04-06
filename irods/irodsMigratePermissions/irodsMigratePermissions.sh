@@ -84,10 +84,14 @@ declare -A USER_ID_MAP
 for user in "${!USER_NAME_MAP[@]}";
 do
    userId=$(iadmin lu $user | grep "user_id" | cut -d " " -f 2)
-   if [ ${USER_NAME_MAP["$user"]+_} ]; then
-      # Create the new users, and add it to the same groups
-      newUserName=${USER_NAME_MAP["$user"]}
-      USER_ID_MAP[$userId]="$user"
+   if [ -z $userId ]; then
+      echo "$user doesn't exist in iRODS, check the mapping file"
+   else
+      if [ ${USER_NAME_MAP["$user"]+_} ]; then
+         # Create the new users, and add it to the same groups
+         newUserName=${USER_NAME_MAP["$user"]}
+         USER_ID_MAP[$userId]="$user"
+      fi
    fi
 done
 
