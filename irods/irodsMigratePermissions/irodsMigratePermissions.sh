@@ -105,6 +105,10 @@ echo "Granting user/group permissions for new users or groups on all projects...
 for project in  $(iquest "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'" | grep "COLL_NAME" | cut -d" " -f 3)
 do
    projectName=${project##*/}
+   if [[ "$projectName" == 'P000000010' ]]; then
+    echo " * Skip P000000010 (MDL-IBD)"
+    continue
+   fi
    echo " * Project: $project   $projectName"
    permissionsString=""
 
