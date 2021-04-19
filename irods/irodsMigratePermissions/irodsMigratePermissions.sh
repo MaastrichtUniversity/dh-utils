@@ -130,8 +130,10 @@ do
       fi
    done< <(iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project'" )
 
-    [[ $DRY_RUN == "false" ]] && irule "changeProjectPermissions(*project, '$permissionsString')" *project="$projectName" ruleExecOut
-
-    echo "  - irule \"changeProjectPermissions(*project, '$permissionsString')\" *project=\"$projectName\" ruleExecOut"
+    if [[ "$permissionsString" != "" ]]; then
+        [[ $DRY_RUN == "false" ]] && irule "changeProjectPermissions(*project, '$permissionsString')" *project="$projectName" ruleExecOut
+        echo "  - irule \"changeProjectPermissions(*project, '$permissionsString')\" *project=\"$projectName\" ruleExecOut"
+    else
+        echo "Skipping project \"$projectName\" because there is nothing to migrate"
+    fi
 done
-
