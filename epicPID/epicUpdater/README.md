@@ -48,7 +48,10 @@
    dryRun = True
    ```
 
-1. Run the script. When you have chosen for dry-run mode above, nothing will be committed to the epic handle server.
+1. Run the script with the command below. When you have chosen for dry-run mode above, nothing will be committed to the epic handle server.
+   ```
+   python updateEpicPID.py
+   ```
 
 1. Check the outcome *on your computer*
    1. on the command line
