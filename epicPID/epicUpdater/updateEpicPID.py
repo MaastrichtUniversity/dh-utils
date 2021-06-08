@@ -7,14 +7,14 @@ from urllib.parse import urlparse
 import logging
 
 # Config
-epicRequestURL = "http://epicpid.dev2.rit.unimaas.nl/epic/"
+epicRequestURL = "http://epicpid.dev1.rit.unimaas.nl/epic/"
 epicPreFix = "21.T12996"
 epicUsername = "user"
 epicPassword = "foobar"
 
-inputFile = "epic_hdl_acc.txt"
-expectedOldURL = "https://datahub.mumc-acc.maastrichtuniversity.nl"
-newBaseURL = "https://rdm.acc.dh.unimaas.nl"
+inputFile = "dev1_pids.csv"
+expectedOldURL = "http://pacman.dev1.rit.unimaas.nl/"
+newBaseURL = "http://mdr.dev1.dh.unimaas.nl/"
 
 dryRun = True
 
@@ -67,7 +67,7 @@ def parseResponse(collection, pid, response):
         if currentURL.startswith(expectedOldURL):
             updatePID(collection, pid, currentURL)
         else:
-            logging.warning("Update not required no URL match")
+            logging.warning("Update not required. Did not match on URL.")
 
 
 
