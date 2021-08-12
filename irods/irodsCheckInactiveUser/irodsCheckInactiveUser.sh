@@ -99,6 +99,17 @@ do
   done
 done
 
+echo "Check for active dropzone"
+for nb_dropzones in $(iquest "%s" "SELECT count(COLL_ACCESS_USER_ID) WHERE COLL_PARENT_NAME = '/nlmumc/ingest/zones' AND COLL_ACCESS_USER_ID = '$userId'"); do
+  if [[ "$nb_dropzones" -gt 0 ]]; then
+      echo -e "${Red} * $nb_dropzones active(s) dropzone(s)${NC}"
+      SAFE_DELETION=false
+  else
+    echo " * No active dropzone"
+  fi
+done
+
+
 
 echo "Summary:"
 if [ $WARNING -gt 0 ]; then
