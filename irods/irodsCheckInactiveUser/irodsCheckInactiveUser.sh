@@ -70,10 +70,43 @@ else
   done
 fi
 
+userId=$(iadmin lu "$USERNAME" | grep "user_id" | cut -d " " -f 2)
+
+WARNING=0
+
+echo "Check for last managers"
+for project in  $(iquest "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'" | grep "COLL_NAME" | cut -d" " -f 3)
+do
+  # Query the numbers of managers for each projects
+  for nb_managers in $(iquest "%s"  "select count(COLL_ACCESS_NAME) where COLL_NAME = '$project' AND COLL_ACCESS_NAME = 'own'"); do
+    # Check if there are two (rods should always be there) or less managers present
+    if [[ "$nb_managers" -le 2 ]]; then
+      echo -e "${Yellow} * $project has two or less manager${NC}"
+      WARNING=$((WARNING+1))
+
+      # Check if the 2nd manager is the input user
+      while mapfile -t -n 4 blocks && ((${#blocks[@]}));
+      do
+        managerId=${blocks[1]##* = }
+        if [ "$userId" == "$managerId" ]; then
+          echo -e "${Red} * $USERNAME is the last manager${NC}"
+          SAFE_DELETION=false
+        else
+           :
+        fi
+      done< <(iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project' AND COLL_ACCESS_NAME = 'own'" )
+    fi
+  done
+done
+
+
 echo "Summary:"
+if [ $WARNING -gt 0 ]; then
+  echo -e "${Yellow} # $WARNING warning found (yellow in the log above)"
+fi
 if $SAFE_DELETION; then
-  echo -e "${Green} The user is safe for deletion${NC}"
+  echo -e "${Green} # $USERNAME is safe for deletion${NC}"
 else
-  echo -e "${Red} The user is not safe for deletion.${NC}"
-  echo -e "${NC} Please resolve the pending issue (in red in the log above)"
+  echo -e "${Red} # $USERNAME is not safe for deletion.${NC}"
+  echo -e "${Red} # Please resolve the pending issue (in red in the log above)${NC}"
 fi
