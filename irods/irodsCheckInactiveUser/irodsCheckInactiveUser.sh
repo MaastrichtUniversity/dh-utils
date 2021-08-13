@@ -166,6 +166,16 @@ function write_acl_csv {
 }
 
 
+function revoke_permissions {
+  for project in  $(iquest "%s" "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'")
+  do
+    echo " * Revoking permissions"
+    ichmod -r null "$USERNAME" "$project"
+    #iadmin rmuser "$USERNAME"
+  done
+}
+
+
 echo "Summary:"
 if [ $WARNING -gt 0 ]; then
   echo -e "${Yellow} # $WARNING warning(s) found (yellow in the log above)"
