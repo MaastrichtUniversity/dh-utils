@@ -133,6 +133,35 @@ for nb_dropzones in $(iquest "%s" "SELECT count(COLL_ACCESS_USER_ID) WHERE COLL_
 done
 
 
+function write_acl_csv {
+  filename="ACL_$USERNAME.csv"
+  touch "$filename"
+  echo -e "${Green} # Writing to $filename${NC}"
+
+  # Get individual user permissions
+  echo "User individual project ACL:" >> "$filename"
+  while mapfile -t -n 4 blocks && ((${#blocks[@]}));
+  do
+    collection=${blocks[0]##* = }
+    accessUserId=${blocks[1]##* = }
+    accessName=${blocks[2]##* = }
+    [[ "$accessName" == "modify object" ]] && accessName="write"
+    [[ "$accessName" == "read object" ]] && accessName="read"
+
+    if [ "$userId" == "$accessUserId" ]; then
+      line="$collection,$USERNAME,$accessName"
+      echo "$line" >> "$filename"
+    fi
+  done< <(iquest "SELECT COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME  WHERE COLL_PARENT_NAME = '/nlmumc/projects'" )
+
+  # Get user group membership
+  echo "" >> "$filename"
+  echo "User group membership:" >> "$filename"
+  for groupName in $(iquest "%s" "SELECT USER_GROUP_NAME WHERE USER_ID = '$userId'"); do
+      echo "$groupName" >> "$filename"
+  done
+}
+
 
 echo "Summary:"
 if [ $WARNING -gt 0 ]; then
@@ -141,6 +170,11 @@ fi
 
 if $SAFE_DELETION; then
   echo -e "${Green} # $USERNAME is safe for deletion${NC}"
+  if [[ $DRY_RUN == "false" ]]; then
+    echo -e "${Green} # Saving ACL${NC}"
+    write_acl_csv
+  fi
+
 else
   echo -e "${Red} # $USERNAME is not safe for deletion.${NC}"
   echo -e "${Red} # Please resolve the pending issue(s) (in red in the log above)${NC}"
