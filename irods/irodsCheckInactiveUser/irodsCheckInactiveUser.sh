@@ -7,13 +7,20 @@ NC='\033[0m'        # No Color
 
 DRY_RUN=true
 WARNING_MODE=true
+SAFE_DELETION=true
+REVOKE_MODE=false
 
-while getopts ":d:u:w:" opt; do
+while getopts ":d:r:u:w:" opt; do
   case $opt in
   d)
     echo "-d was triggered with $OPTARG" >&2
     DRY_RUN=${OPTARG}
     echo "DRY_RUN is $DRY_RUN" >&2
+    ;;
+  r)
+    echo "-r was triggered with $OPTARG" >&2
+    REVOKE_MODE=${OPTARG}
+    echo "REVOKE_MODE is $DRY_RUN" >&2
     ;;
   u)
     echo "-u was triggered with $OPTARG" >&2
@@ -42,6 +49,7 @@ done
 
 if [ $OPTIND -eq 1 ]; then
   echo "No options were passed"
+  echo "Exit"
   exit 1
 fi
 
@@ -167,11 +175,10 @@ function write_acl_csv {
 
 
 function revoke_permissions {
+  echo -e "${Green} # Revoking permissions${NC}"
   for project in  $(iquest "%s" "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'")
   do
-    echo " * Revoking permissions"
     ichmod -r null "$USERNAME" "$project"
-    #iadmin rmuser "$USERNAME"
   done
 }
 
@@ -186,6 +193,11 @@ if $SAFE_DELETION; then
   if [[ $DRY_RUN == "false" ]]; then
     echo -e "${Green} # Saving ACL${NC}"
     write_acl_csv
+    if $REVOKE_MODE; then
+      revoke_permissions
+    else
+      echo -e " # Skip revoke permissions; REVOKE_MODE is $REVOKE_MODE"
+    fi
   fi
 
 else
