@@ -53,7 +53,36 @@ if [ $OPTIND -eq 1 ]; then
   exit 1
 fi
 
-SAFE_DELETION=true
+if [[ -z ${USERNAME} ]]; then
+  echo "Parameter USERNAME (-u) is required!"
+  echo "Exit"
+  exit 1
+fi
+
+
+echo "Check icommand"
+ils &>/dev/null
+exit_status=$?
+if [ $exit_status -ne 0 ]; then
+  echo -e "${Red} * Get a working _rodsadmin_ connection through __iinit__${NC}"
+  echo -e "${Red} * Or switch to the *rods* user${NC}"
+  echo "Exit"
+  exit 1
+else
+  irods_user_name=$(ienv | grep irods_user_name | cut -d" " -f 3)
+  echo " * Using iRODS user: $irods_user_name"
+fi
+
+
+echo "Check if $USERNAME exists"
+if [[ $(iadmin lu "$USERNAME") == "No rows found"  ]] ; then
+  echo -e "${Red} * Invalid username${NC}"
+  echo "Exit"
+  exit 1
+else
+  echo " * Valid user"
+fi
+
 
 echo "Check data steward role"
 attribute=dataSteward
