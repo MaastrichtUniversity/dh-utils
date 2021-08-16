@@ -145,7 +145,8 @@ done
 
 
 function write_acl_csv {
-  filename="ACL_$USERNAME.csv"
+  timestamp=$(date +"%Y-%m-%d")
+  filename="ACL_$USERNAME-$timestamp.csv"
   touch "$filename"
   echo -e "${Green} # Writing to $filename${NC}"
 
