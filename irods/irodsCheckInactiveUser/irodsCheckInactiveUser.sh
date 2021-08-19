@@ -180,7 +180,7 @@ function write_acl_csv {
   echo -e "${Green} # Writing to $filename${NC}"
 
   # Get individual user permissions
-  echo "User individual project ACL:" >> "$filename"
+  echo "#Collection,Username,AccessLevel" > "$filename"
   while mapfile -t -n 4 blocks && ((${#blocks[@]}));
   do
     collection=${blocks[0]##* = }
