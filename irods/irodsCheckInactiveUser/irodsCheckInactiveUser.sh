@@ -194,13 +194,6 @@ function write_acl_csv {
       echo "$line" >> "$filename"
     fi
   done< <(iquest "SELECT COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME  WHERE COLL_PARENT_NAME = '/nlmumc/projects'" )
-
-  # Get user group membership
-  echo "" >> "$filename"
-  echo "User group membership:" >> "$filename"
-  for groupName in $(iquest "%s" "SELECT USER_GROUP_NAME WHERE USER_ID = '$userId'"); do
-      echo "$groupName" >> "$filename"
-  done
 }
 
 
