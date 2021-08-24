@@ -132,7 +132,7 @@ for project in  $(iquest "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/pro
 do
   # Query the numbers of managers for each projects
   for nb_managers in $(iquest "%s"  "select count(COLL_ACCESS_NAME) where COLL_NAME = '$project' AND COLL_ACCESS_NAME = 'own'"); do
-    # Check if there are two (rods should always be there) or less managers present
+    # Check if there are two or less managers present. (3 managers are to be expected: the PI, the DS and rods)
     if [[ "$nb_managers" -le 2 ]]; then
       if $WARNING_MODE; then
         echo -e "${Yellow} * $project has two or less managers${NC}"
