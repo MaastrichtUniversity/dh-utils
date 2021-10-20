@@ -90,7 +90,7 @@ ds=$(imeta ls -u "$USERNAME" specialty)
 
 occurrences=0
 if echo "$ds" | grep -q "data-steward"; then
-  for project in $(iquest "select COLL_NAME where META_COLL_ATTR_NAME = '$attribute' AND  META_COLL_ATTR_VALUE = '$USERNAME'" | grep "COLL_NAME" | cut -d" " -f 3); do
+  for project in $(iquest --no-page "select COLL_NAME where META_COLL_ATTR_NAME = '$attribute' AND  META_COLL_ATTR_VALUE = '$USERNAME'" | grep "COLL_NAME" | cut -d" " -f 3); do
     occurrences=$((occurrences+1))
     if [[ "$occurrences" -eq 1 ]]; then
       echo -e "${NC}* $USERNAME is a data steward for the project(s):"
@@ -110,13 +110,13 @@ fi
 echo "Check PI role"
 attribute="OBI:0000103"
 
-PI=$(iquest "select COLL_NAME where META_COLL_ATTR_NAME = '$attribute' AND  META_COLL_ATTR_VALUE = '$USERNAME'")
+PI=$(iquest --no-page "select COLL_NAME where META_COLL_ATTR_NAME = '$attribute' AND  META_COLL_ATTR_VALUE = '$USERNAME'")
 
 if echo "$PI" | grep -q "Nothing was found matching your query"; then
   echo " * No PI role found"
 else
   echo -e "${Red}* $USERNAME is a PI for the project(s):${NC}"
-  for project in $(iquest "select COLL_NAME where META_COLL_ATTR_NAME = '$attribute' AND  META_COLL_ATTR_VALUE = '$USERNAME'" | grep "COLL_NAME" | cut -d" " -f 3); do
+  for project in $(iquest --no-page "select COLL_NAME where META_COLL_ATTR_NAME = '$attribute' AND  META_COLL_ATTR_VALUE = '$USERNAME'" | grep "COLL_NAME" | cut -d" " -f 3); do
     echo -e "${Red} * $project${NC}"
     SAFE_DELETION=false
   done
@@ -128,10 +128,10 @@ WARNING=0
 occurrences=0
 
 echo "Check for last managers"
-for project in  $(iquest "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'" | grep "COLL_NAME" | cut -d" " -f 3)
+for project in  $(iquest --no-page "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'" | grep "COLL_NAME" | cut -d" " -f 3)
 do
   # Query the numbers of managers for each projects
-  for nb_managers in $(iquest "%s"  "select count(COLL_ACCESS_NAME) where COLL_NAME = '$project' AND COLL_ACCESS_NAME = 'own'"); do
+  for nb_managers in $(iquest --no-page "%s"  "select count(COLL_ACCESS_NAME) where COLL_NAME = '$project' AND COLL_ACCESS_NAME = 'own'"); do
     # Check if there are two or less managers present. (3 managers are to be expected: the PI, the DS and rods)
     if [[ "$nb_managers" -le 2 ]]; then
       if $WARNING_MODE; then
@@ -150,7 +150,7 @@ do
         else
            :
         fi
-      done< <(iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project' AND COLL_ACCESS_NAME = 'own'" )
+      done< <(iquest --no-page "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project' AND COLL_ACCESS_NAME = 'own'" )
     fi
   done
 done
@@ -160,11 +160,11 @@ fi
 
 
 echo "Check for active dropzone"
-for nb_dropzones in $(iquest "%s" "SELECT count(COLL_ACCESS_USER_ID) WHERE COLL_PARENT_NAME = '/nlmumc/ingest/zones' AND COLL_ACCESS_USER_ID = '$userId'"); do
+for nb_dropzones in $(iquest --no-page "%s" "SELECT count(COLL_ACCESS_USER_ID) WHERE COLL_PARENT_NAME = '/nlmumc/ingest/zones' AND COLL_ACCESS_USER_ID = '$userId'"); do
   if [[ "$nb_dropzones" -gt 0 ]]; then
       echo -e "${Red} * $nb_dropzones active(s) dropzone(s)${NC}"
       SAFE_DELETION=false
-      for dropzone in $(iquest "%s" "SELECT COLL_NAME WHERE COLL_PARENT_NAME = '/nlmumc/ingest/zones' AND COLL_ACCESS_USER_ID = '$userId'"); do
+      for dropzone in $(iquest --no-page "%s" "SELECT COLL_NAME WHERE COLL_PARENT_NAME = '/nlmumc/ingest/zones' AND COLL_ACCESS_USER_ID = '$userId'"); do
         echo -e "${Red} * $dropzone${NC}"
       done
   else
@@ -193,13 +193,13 @@ function write_acl_csv {
       line="$collection,$USERNAME,$accessName"
       echo "$line" >> "$filename"
     fi
-  done< <(iquest "SELECT COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME  WHERE COLL_PARENT_NAME = '/nlmumc/projects'" )
+  done< <(iquest --no-page "SELECT COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME  WHERE COLL_PARENT_NAME = '/nlmumc/projects'" )
 }
 
 
 function revoke_permissions {
   echo -e "${Green} # Revoking permissions${NC}"
-  for project in  $(iquest "%s" "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'")
+  for project in  $(iquest --no-page "%s" "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'")
   do
     ichmod -r null "$USERNAME" "$project"
   done
