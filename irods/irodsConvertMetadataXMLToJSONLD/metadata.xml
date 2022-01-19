@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<metadata>
+  <project>P000000002</project>
+  <title>ATGL and CGI-58 Western Blot</title>
+  <description>CGI-58 is involved in the regulation of energy metabolism in skeletal muscle. This investigation consists of various Western Blots targeted at both ATGL and CGI-58 in human myoblasts.</description>
+  <date>2010-05-11</date>
+  <factors>
+    <factor></factor>
+    <factor>CGI-58</factor>
+    <factor>ATGL</factor>
+    <factor>lipolysis</factor>
+    <factor>myoblasts</factor>
+  </factors>
+  <organism id="ncbitaxon:http://purl.obolibrary.org/obo/NCBITaxon_9606">Homo sapiens</organism>
+  <tissue id="efo:http://purl.obolibrary.org/obo/UBERON_0014892">skeletal muscle organ</tissue>
+  <technology id="ero:http://purl.obolibrary.org/obo/OBI_0000854">western blot analysis</technology>
+  <article>https://doi.org/10.1194/jlr.M019182</article>
+  <article>https://doi.org/10.1016/j.bbalip.2009.09.011</article>
+  <creator>m.coonen@maastrichtuniversity.nl</creator>
+  <contact>
+    <lastName>Coonen</lastName>
+    <firstName>Maarten</firstName>
+    <midInitials></midInitials>
+    <email>m.coonen@maastrichtuniversity.nl</email>
+    <phone></phone>
+    <address>1 avenue du Professeur Jean Poulh&#xE8;s, 31432 Toulouse Cedex 4, France</address>
+    <affiliation>INSERM U858</affiliation>
+    <role>Intern</role>
+  </contact>
+  <contact>
+    <lastName>Schrauwen</lastName>
+    <firstName>Patrick</firstName>
+    <midInitials></midInitials>
+    <email></email>
+    <phone></phone>
+    <address>UNS 50, Universiteitssingel 50, 6229 ER Maastricht</address>
+    <affiliation>Maastricht University</affiliation>
+    <role>Principal Investigator</role>
+  </contact>
+  <contact>
+    <lastName></lastName>
+    <firstName></firstName>
+    <midInitials></midInitials>
+    <email></email>
+    <phone></phone>
+    <address></address>
+    <affiliation></affiliation>
+    <role></role>
+  </contact>
+  <protocol>
+    <name></name>
+    <filename></filename>
+  </protocol>
+</metadata>
