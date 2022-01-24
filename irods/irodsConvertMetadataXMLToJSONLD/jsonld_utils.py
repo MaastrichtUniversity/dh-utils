@@ -30,17 +30,174 @@ def add_publications_values(articles):
     return ret
 
 
-def add_factors_values(factors):
-    ret = []
-    for factor in factors:
-        ret.append({
-            "@value": factor
-        })
+def add_ontology_value(value):
+    ret = {}
+    if value['id'] != "" and "http" in value['id']:
+        ontology_id = "http" + value['id'].split("http")[1]
+        ret = {
+            "@id": ontology_id,
+            "rdfs:label": value['label']
+        }
     return ret
 
 
-def add_ontology_value(value):
-    return {
-        "@id": value.split("::")[0],
-        "rdfs:label": value.split("::")[1]
+def format_common_value(value: str) -> dict:
+    """
+    Format the given value to match the common json-ld standard.
+
+    Parameters
+    ----------
+    value: str
+        The user input value to format
+
+    Returns
+    -------
+    dict
+        The json-ld formatted value
+    """
+    return {"@value": value}
+
+
+def add_creator(avu_metadata):
+    full_name = f"{avu_metadata['creatorGivenName']} {avu_metadata['creatorFamilyName']}"
+    ret = {
+        "creatorGivenName": format_common_value(avu_metadata["creatorGivenName"]),
+        "creatorFamilyName": format_common_value(avu_metadata["creatorFamilyName"]),
+        "creatorFullName": format_common_value(full_name),
+        "creatorIdentifier": format_common_value(None),
+        "creatorAffiliation": {},
+        "creatorIdentifierScheme": {},
+        "creatorIdentifierSchemeIRI": {}
     }
+    return ret
+
+
+def add_keywords(keywords):
+    ret = []
+    for keyword in keywords:
+        ret.append({
+            "@context": {
+                "subjectSchemeIRI": "http://vocab.fairdatacollective.org/gdmt/hasSubjectSchemeIRI",
+                "valueURI": "https://schema.metadatacenter.org/properties/af9c45ec-d971-4056-a6c2-5ce930b9b181",
+                "Subject": "https://schema.metadatacenter.org/properties/71f1a80c-d59e-4d92-a084-4f22f219cb6e"
+            },
+            "subjectSchemeIRI": {
+                "@value": None
+            },
+            "valueURI": {
+            },
+            "@id": "https://repo.metadatacenter.org/template-elements/fc4e957d-637c-4a00-b371-d9e981ce3af4",
+            "Subject": {
+                "@value": keyword
+            }
+        })
+
+    return ret
+
+
+def add_contact_affiliation(contact):
+    ret = {}
+    if contact['Affiliation']:
+        ret = {
+            "rdfs:label": contact['Affiliation'],
+            "@id": "http://purl.org/zonmw/generic/10089"
+        }
+    return ret
+
+
+def add_contact_full_name(contact):
+    if contact['FirstName'] is None:
+        raise Exception("FirstName is null")
+    if contact['LastName'] is None:
+        raise Exception("LastName is null")
+    ret = f"{contact['FirstName']} {contact['LastName']}"
+    if contact['MidInitials']:
+        ret = f"{contact['FirstName']} {contact['MidInitials']} {contact['LastName']}"
+    return ret
+
+
+def add_contact_person(contacts):
+    ret = []
+    for contact in contacts:
+        ret.append({
+            "contributorIdentifierScheme": {},  # TODO fix non unique ID
+            "contributorIdentifier": {
+                "@value": None
+            },  # TODO fix non unique ID
+            "contactFullName": {
+                "@value": add_contact_full_name(contact)
+            },
+            "contactAffiliation": add_contact_affiliation(contact),
+            "contactPersonRole": {
+                "@value": contact['Role']
+            },
+            "contactEmail": {
+                "@value": contact['Email']
+            },
+            "contactPersonPhone": {
+                "@value": contact['Phone']
+            },
+            "contactFamilyName": {
+                "@value": contact['LastName']
+            },
+            "contactGivenName": {
+                "@value": contact['FirstName']
+            },
+            "contactType": {
+                "rdfs:label": "contact person",
+                "@id": "http://purl.org/zonmw/generic/10089"
+            },
+            "@context": {
+                "contributorIdentifierScheme": "https://schema.metadatacenter.org/properties/264bff35-9c7e-4a84-a722-712217dfa232",
+                "contactFullName": "https://schema.metadatacenter.org/properties/9cc96e17-345e-43c1-955d-9777ef8136aa",
+                "contributorIdentifier": "https://schema.metadatacenter.org/properties/4636604a-6a42-4257-8a34-b8c68627cf32",
+                "contactAffiliation": "https://schema.metadatacenter.org/properties/488e6114-b24f-4bf6-83b0-45a33abdabf6",
+                "contactPersonRole": "https://schema.metadatacenter.org/properties/2db8b77d-450f-4435-a5ff-cd8f849d6725",
+                "contactEmail": "https://schema.metadatacenter.org/properties/72eb0553-76b7-4ef2-898f-694aa015cdd4",
+                "contactPersonPhone": "https://schema.metadatacenter.org/properties/d99194e1-183f-4dc8-9af9-3efbd81b9dac",
+                "contactFamilyName": "https://schema.metadatacenter.org/properties/510d9317-3658-429b-b773-8f9c0d288668",
+                "contactGivenName": "https://schema.metadatacenter.org/properties/1b2e719d-c7cc-4db0-b6f8-22ccdf43a387",
+                "contactType": "https://schema.metadatacenter.org/properties/4d0bd488-6d4a-4388-bfa9-3cbb1d941afb"
+            },
+            "@id": "https://repo.metadatacenter.org/template-elements/00011dcd-573f-40dc-8453-b1e4a238a481"
+        })
+
+    return ret
+
+
+def add_contributors(contributors):
+    ret = []
+    for contributor in contributors.values():
+        ret.append({
+            "contributorIdentifierScheme": {},
+            "contributorIdentifier": {
+                "@value": None
+            },
+            "contributorAffiliation": {},
+            "contributorFullName": {
+                "@value": contributor["contributorFullName"]
+            },
+            "contributorGivenName": {
+                "@value": contributor["contributorGivenName"]
+            },
+            "contributorFamilyName": {
+                "@value": contributor["contributorFamilyName"]
+            },
+            "contributorEmail": {
+                "@value": contributor["contributorEmail"]
+            },
+            "contributorType": contributor["contributorType"],
+            "@id": "https://repo.metadatacenter.org/template-elements/1d979a88-1028-421d-a124-11b5011f278a",
+            "@context": {
+                "contributorIdentifierScheme": "https://schema.metadatacenter.org/properties/264bff35-9c7e-4a84-a722-712217dfa232",
+                "contributorAffiliation": "https://schema.metadatacenter.org/properties/73214405-3002-4fde-8f6c-b012faf907ec",
+                "contributorFullName": "https://schema.metadatacenter.org/properties/272d6c5e-467c-4c01-a513-23b8df92585d",
+                "contributorIdentifier": "https://schema.metadatacenter.org/properties/4636604a-6a42-4257-8a34-b8c68627cf32",
+                "contributorFamilyName": "https://schema.metadatacenter.org/properties/510d9317-3658-429b-b773-8f9c0d288668",
+                "contributorType": "https://schema.metadatacenter.org/properties/4d0bd488-6d4a-4388-bfa9-3cbb1d941afb",
+                "contributorGivenName": "https://schema.metadatacenter.org/properties/1b2e719d-c7cc-4db0-b6f8-22ccdf43a387",
+                "contributorEmail": "https://schema.metadatacenter.org/properties/72eb0553-76b7-4ef2-898f-694aa015cdd4"
+            }
+        })
+
+    return ret

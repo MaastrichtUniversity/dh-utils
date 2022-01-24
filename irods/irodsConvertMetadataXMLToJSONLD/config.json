@@ -1,0 +1,34 @@
+{
+  "instance_file": "instance_template_min.json",
+  "schema_file": "DataHub_extended_schema.json",
+  "xml_file": "metadata_min.xml",
+  "PID": "https://hdl.handle.net/21.T12996/P000000014C000000001",
+  "creatorGivenName": "Jonathan",
+  "creatorFamilyName": "Melius",
+  "creator_username": "jmelius",
+  "submissionDate": "2022-1-01",
+  "ctime": "2022-1-01T9:49:15",
+  "contributors": {
+    "data manager": {
+      "contributorFullName": "Olav Palmen",
+      "contributorFamilyName": "Palmen",
+      "contributorType": {
+        "rdfs:label": "data manager",
+        "@id": "http://purl.org/zonmw/generic/10077"
+      },
+      "contributorGivenName": "Olav",
+      "contributorEmail": "o.palmen@maastrichtuniversity.nl"
+    },
+    "project manager": {
+      "contributorFullName": "Pascal Suppers",
+      "contributorFamilyName": "Suppers",
+      "contributorType": {
+        "rdfs:label": "project manager",
+        "@id": "http://purl.org/zonmw/generic/10082"
+      },
+      "contributorGivenName": "Pascal",
+      "contributorEmail": "p.suppers@maastrichtuniversity.nl"
+    }
+  }
+}
+

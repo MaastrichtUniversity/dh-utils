@@ -103,7 +103,8 @@ def read_contacts(root):
                           "Affiliation": contact.find('affiliation').text,
                           "Role": contact.find('role').text}
         if not is_invalid_contact(contact_object):
-            contacts.append(add_contact_value(contact))
+            # contacts.append(add_contact_value(contact))
+            contacts.append(contact_object)
 
     return contacts
 
@@ -132,44 +133,3 @@ def is_invalid_contact(contact):
     return contact["LastName"] is None and contact["FirstName"] is None and contact["MidInitials"] is None and contact[
         "Email"] is None and contact["Phone"] is None and contact["Address"] is None and contact[
                "Affiliation"] is None and contact["Role"] is None
-
-
-def add_contact_value(contact):
-    return {
-        "@context": {
-            "FirstName": "https://schema.metadatacenter.org/properties/89b82b7c-457b-4d85-a452-25f4aef66ead",
-            "LastName": "https://schema.metadatacenter.org/properties/54ef56e8-3371-4f89-840c-74b35236b002",
-            "MidInitials": "https://schema.metadatacenter.org/properties/7984939f-a9a5-4328-830a-0d389718c835",
-            "Email": "https://schema.metadatacenter.org/properties/75f7c277-5071-4926-bb0a-512b9e560026",
-            "Phone": "https://schema.metadatacenter.org/properties/07d636a9-4b7b-4e72-b35d-d35acf99c73c",
-            "Address": "https://schema.metadatacenter.org/properties/a57912c3-6a65-46fd-86d0-b98c23046f93",
-            "Affiliation": "https://schema.metadatacenter.org/properties/33626622-b8f5-44ee-8088-076d24a32088",
-            "Role": "https://schema.metadatacenter.org/properties/5591dcbc-89ac-4e63-adbe-b5aa2f06ec11"
-        },
-        "FirstName": {
-            "@value": contact.find('firstName').text
-        },
-        "LastName": {
-            "@value": contact.find('lastName').text
-        },
-        "MidInitials": {
-            "@value": contact.find('midInitials').text
-        },
-        "Email": {
-            "@value": contact.find('email').text
-        },
-        "Phone": {
-            "@value": contact.find('phone').text,
-            "@type": "xsd:decimal"
-        },
-        "Address": {
-            "@value": contact.find('address').text
-        },
-        "Affiliation": {
-            "@value": contact.find('affiliation').text
-        },
-        "Role": {
-            "@value": contact.find('role').text
-        },
-        "@id": "https://repo.metadatacenter.org/template-element-instances/a4ac16dc-2534-4f4f-b777-24d938403a63"
-    }
