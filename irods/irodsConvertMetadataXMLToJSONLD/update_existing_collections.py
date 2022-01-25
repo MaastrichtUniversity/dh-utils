@@ -56,9 +56,8 @@ def get_avu_metadata(rule_manager, coll, users, project_id):
         creator_username = ""
         print(f"Error: user info missing for {creator}/")
 
-    print()
     ret = {
-        "PID": f"https://hdl.handle.net/{pid}",
+        "PID": f"https://hdl.handle.net/{pid}.1",
         "creatorGivenName": first_name,
         "creatorFamilyName": last_name,
         "creator_username": creator_username,
@@ -107,9 +106,8 @@ def replace_collection_metadata(rule_manager, project_id, collection_id, pid, in
     version = 1
 
     # Update @id of instance.json and schema.json
-
     schema_url = f"{pid}schema.{version}"
-    instance_object["@id"] = f"{pid}.{version}"
+    instance_object["@id"] = f"{pid}instance.{version}"
     instance_object["schema:isBasedOn"] = schema_url
     schema_object["@id"] = schema_url
 
