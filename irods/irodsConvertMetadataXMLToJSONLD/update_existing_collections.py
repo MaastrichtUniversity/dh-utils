@@ -126,7 +126,7 @@ def replace_collection_metadata(rule_manager, project_id, collection_id, pid, in
     except (exception.DataObjectDoesNotExist, exception.SYS_FILE_DESC_OUT_OF_RANGE):
         print(f"Error: during put operation")
 
-    # Check if .metadata_versions
+    # TODO Check if .metadata_versions
 
     # Create a copy of instance.json and schema.json in .metadata_versions
     # Create metadata_versions and copy schema and instance from root to that folder as version 1
@@ -137,6 +137,7 @@ def convert_collection_metadata(rule_manager, json_instance_template, users):
     session = rule_manager.session
 
     # https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/release/customizable_metadata/core/static/assets/schemas/DataHub_general_schema.json?token=GHSAT0AAAAAABQNGBMEBRROAKZVV4K6ZBFUYPX6BOQ
+    # TODO Get schema from github
     with open("DataHub_extended_schema.json", encoding='utf-8') as schema_file:
         json_schema = json.load(schema_file)
     schema_version = json_schema["pav:version"]
@@ -148,10 +149,10 @@ def convert_collection_metadata(rule_manager, json_instance_template, users):
             collection_id = collection.name
             print(f"Processing {project_id}/{collection_id}")
 
-            # Add check if instance/schema already exist
+            # TODO  Add check if instance/schema already exist
 
-            if collection_id != "C000000001" or project_id != "P000000014":
-                continue
+            # if collection_id != "C000000001" or project_id != "P000000014":
+            #     continue # TODO
 
             rule_manager.open_project_collection(project_id, collection_id, session.username, "own")
 
@@ -166,9 +167,10 @@ def convert_collection_metadata(rule_manager, json_instance_template, users):
             json_instance = Conversion(metadata_xml, json_instance_template, avu).get_instance()
 
             validate(instance=json_instance, schema=json_schema)
-            # TODO affiliation mapping
+            # TODO
+            #  affiliation mapping
 
-            # print(json.dumps(json_instance, ensure_ascii=False, indent=4))
+            print(json.dumps(json_instance, ensure_ascii=False, indent=4))
 
             register_pids(rule_manager, project_id, collection_id)
             update_collection_metadata(rule_manager, project_id, collection_id, schema_version)
@@ -220,6 +222,7 @@ def main():
     username = "rods"
     password = "irods"
 
+    # TODO
     # force-flag
     # dry-mode
     # commit

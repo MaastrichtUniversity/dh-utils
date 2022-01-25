@@ -19,12 +19,12 @@ class Conversion:
         self.add_creator()
         self.add_title()
         self.add_publisher()
-        self.add_subject()  # Put one object when empty
+        self.add_subject()
         self.add_contributor()
-        self.add_contact()  # Put one object when empty
+        self.add_contact()
         self.add_date()
         self.add_resource_type()
-        self.add_related_identifier()  # Put one object when empty
+        self.add_related_identifier()
         self.add_description()
         self.add_extended_date()
         self.add_extended_experiment()
@@ -60,7 +60,8 @@ class Conversion:
     def add_subject(self):
         # "6_Subject":
         factors = read_tag_node(self.xml_root, "factors")
-        add_value_to_key(self.json_instance_template, "6_Subject", add_keywords(factors))
+        if len(factors) != 0:
+            add_value_to_key(self.json_instance_template, "6_Subject", add_keywords(factors))
 
     def add_contributor(self):
         # "7_Contributor":
@@ -70,7 +71,12 @@ class Conversion:
     def add_contact(self):
         # "7_ContactPerson":
         contacts = read_contacts(self.xml_root)
-        add_value_to_key(self.json_instance_template, "7_ContactPerson", add_contact_person(contacts))
+        if len(contacts) != 0:
+            add_value_to_key(self.json_instance_template, "7_ContactPerson", add_contact_person(contacts))
+        else:
+            # If there is no contact in metadata.xml, add the PI by default
+            add_value_to_key(self.json_instance_template, "7_ContactPerson",
+                             add_pi_contact(self.avu_metadata["contributors"]["project manager"]))
 
     def add_date(self):
         # "8_Date":
@@ -84,7 +90,8 @@ class Conversion:
     def add_related_identifier(self):
         # "12_RelatedIdentifier":
         articles = read_tag_list(self.xml_root, "article")
-        add_value_to_key(self.json_instance_template, "12_RelatedIdentifier", add_publications_values(articles))
+        if len(articles) != 0:
+            add_value_to_key(self.json_instance_template, "12_RelatedIdentifier", add_publications_values(articles))
 
     def add_description(self):
         # "17_Description":

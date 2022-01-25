@@ -165,6 +165,51 @@ def add_contact_person(contacts):
     return ret
 
 
+def add_pi_contact(pi):
+    return [{
+        "contactType": {
+            "@id": "http://purl.org/zonmw/generic/10089",
+            "rdfs:label": "contact person"
+        },
+        "contactFullName": {
+            "@value": pi["contributorFullName"]
+        },
+        "contactGivenName": {
+            "@value": pi["contributorGivenName"]
+        },
+        "contactFamilyName": {
+            "@value": pi["contributorFamilyName"]
+        },
+        "contactEmail": {
+            "@value": pi["contributorEmail"]
+        },
+        "contributorIdentifier": {
+            "@value": None
+        },
+        "contributorIdentifierScheme": {},
+        "contactAffiliation": {},
+        "contactPersonPhone": {
+            "@value": None
+        },
+        "contactPersonRole": {
+            "@value": None
+        },
+        "@id": "https://repo.metadatacenter.org/template-elements/00011dcd-573f-40dc-8453-b1e4a238a481",
+        "@context": {
+            "contactType": "https://schema.metadatacenter.org/properties/4d0bd488-6d4a-4388-bfa9-3cbb1d941afb",
+            "contactFullName": "https://schema.metadatacenter.org/properties/9cc96e17-345e-43c1-955d-9777ef8136aa",
+            "contactGivenName": "https://schema.metadatacenter.org/properties/1b2e719d-c7cc-4db0-b6f8-22ccdf43a387",
+            "contactFamilyName": "https://schema.metadatacenter.org/properties/510d9317-3658-429b-b773-8f9c0d288668",
+            "contactEmail": "https://schema.metadatacenter.org/properties/72eb0553-76b7-4ef2-898f-694aa015cdd4",
+            "contributorIdentifier": "https://schema.metadatacenter.org/properties/4636604a-6a42-4257-8a34-b8c68627cf32",
+            "contributorIdentifierScheme": "https://schema.metadatacenter.org/properties/264bff35-9c7e-4a84-a722-712217dfa232",
+            "contactAffiliation": "https://schema.metadatacenter.org/properties/488e6114-b24f-4bf6-83b0-45a33abdabf6",
+            "contactPersonPhone": "https://schema.metadatacenter.org/properties/d99194e1-183f-4dc8-9af9-3efbd81b9dac",
+            "contactPersonRole": "https://schema.metadatacenter.org/properties/2db8b77d-450f-4435-a5ff-cd8f849d6725"
+        }
+    }]
+
+
 def add_contributors(contributors):
     ret = []
     for contributor in contributors.values():
