@@ -15,8 +15,7 @@ from jsonschema import validate
 def read_metadata_xml(session, xml_path):
     try:
         with session.data_objects.open(xml_path, "r") as f:
-            buff = f.read()
-            metadata_xml = ET.fromstring(buff)
+            metadata_xml = ET.fromstring(f.read())
     except (exception.DataObjectDoesNotExist, exception.SYS_FILE_DESC_OUT_OF_RANGE):
         metadata_xml = ""
         print(f"Error: {xml_path} not found")
@@ -46,7 +45,6 @@ def get_avu_metadata(rule_manager, coll, users, project_id):
         print(f"Error: creator missing for {coll.path}/")
 
     try:
-        # creator = 'p.vanschayck@maastrichtuniversity.nl'
         display_name = users[creator].display_name
         split = display_name.split(" ")
         first_name = split[0]
@@ -71,35 +69,31 @@ def get_avu_metadata(rule_manager, coll, users, project_id):
     return ret
 
 
-def update_collection_metadata(rule_manager, project_id, collection_id):
+def update_collection_metadata(rule_manager, project_id, collection_id, schema_version):
     destination_collection = f"/nlmumc/projects/{project_id}/{collection_id}"
 
-    rule_manager.setCollectionAVU(destination_collection, "latest_version_number", "1")
-    rule_manager.setCollectionSize(project_id, collection_id, "false", "false")
-    rule_manager.setCollectionAVU(destination_collection, "schemaName", "DataHub_extended_schema")
-    rule_manager.setCollectionAVU(destination_collection, "schemaVersion", "1.0.0")
-    # "pav:version"
+    rule_manager.set_collection_avu(destination_collection, "latest_version_number", "1")
+    rule_manager.set_collection_size(project_id, collection_id, "false", "false")
+    rule_manager.set_collection_avu(destination_collection, "schemaName", "DataHub_extended_schema")
+    rule_manager.set_collection_avu(destination_collection, "schemaVersion", schema_version)
 
 
 def register_pids(rule_manager, project_id, collection_id):
-    # 5 pid registrations (the "hdl.handle.net/21.12109/P0008C0001" should already be registered)
-
     destination_collection = f"/nlmumc/projects/{project_id}/{collection_id}"
 
     # Requesting a PID via epicPID for version 0 (root version)
-    handle_pids = rule_manager.get_versioned_pids(project_id, collection_id, "", "")["arguments"][3]
-    handle_pids = json.loads(handle_pids)
+    handle_pids = rule_manager.get_versioned_pids(project_id, collection_id, "")
     if not handle_pids:
         print("Retrieving multiple PID's failed for {}, leaving blank".format(destination_collection))
-    elif "collection" not in handle_pids or handle_pids["collection"]["handle"] == "":
+    elif handle_pids.collection["handle"] == "":
         print("Retrieving PID for root collection failed for {}, leaving blank".format(destination_collection))
-    elif "schema" not in handle_pids or handle_pids["schema"]["handle"] == "":
+    elif handle_pids.schema["handle"] == "":
         print("Retrieving PID for root collection schema failed for {}, leaving blank".format(destination_collection))
-    elif "instance" not in handle_pids or handle_pids["instance"]["handle"] == "":
+    elif handle_pids.instance["handle"] == "":
         print("Retrieving PID for root collection instance failed for {}, leaving blank".format(destination_collection))
 
-    handle_pids_version = rule_manager.create_ingest_metadata_versions(project_id, collection_id)
-    handle_pids_version = json.loads(handle_pids_version)
+    # Requesting PID's for Project Collection version 1 (includes instance and schema)
+    handle_pids_version = rule_manager.get_versioned_pids(project_id, collection_id, "1")
     if not handle_pids_version:
         print("Retrieving multiple PID's failed for {} version 1, leaving blank".format(destination_collection))
 
@@ -135,9 +129,10 @@ def replace_collection_metadata(rule_manager, project_id, collection_id, pid, in
         print(f"Error: during put operation")
 
     # Check if .metadata_versions
+
     # Create a copy of instance.json and schema.json in .metadata_versions
     # Create metadata_versions and copy schema and instance from root to that folder as version 1
-    # rule_manager.create_ingest_metadata_versions(project_id, collection_id)
+    rule_manager.create_ingest_metadata_versions(project_id, collection_id)
 
 
 def convert_collection_metadata(rule_manager, json_instance_template, users):
@@ -146,6 +141,7 @@ def convert_collection_metadata(rule_manager, json_instance_template, users):
     # https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/release/customizable_metadata/core/static/assets/schemas/DataHub_general_schema.json?token=GHSAT0AAAAAABQNGBMEBRROAKZVV4K6ZBFUYPX6BOQ
     with open("DataHub_extended_schema.json", encoding='utf-8') as schema_file:
         json_schema = json.load(schema_file)
+    schema_version = json_schema["pav:version"]
 
     projects_root = session.collections.get("/nlmumc/projects")
     for project in projects_root.subcollections:
@@ -176,13 +172,13 @@ def convert_collection_metadata(rule_manager, json_instance_template, users):
 
             # print(json.dumps(json_instance, ensure_ascii=False, indent=4))
 
-            # register_pids(rule_manager, project_id, collection_id)
-            # update_collection_metadata(rule_manager, project_id, collection_id)
-            # replace_collection_metadata(rule_manager, project_id, collection_id, avu["PID"], json_instance, json_schema)
-            # rule_manager.close_project_collection(project_id, collection_id)
+            register_pids(rule_manager, project_id, collection_id)
+            update_collection_metadata(rule_manager, project_id, collection_id, schema_version)
+            replace_collection_metadata(rule_manager, project_id, collection_id, avu["PID"], json_instance, json_schema)
+            rule_manager.close_project_collection(project_id, collection_id)
 
 
-def get_users_display_names(rule_manager):
+def get_users_info(rule_manager):
     ret = {}
     result = rule_manager.get_users("false")
     for user in result.users:
@@ -234,10 +230,10 @@ def main():
         "IRODS_HOST": host,
         "IRODS_USER": username,
         "IRODS_PASS": password,
-        "server_policy": "CS_NEG_REQUIRE"
+        "IRODS_CLIENT_SERVER_POLICY": "CS_NEG_REQUIRE"
     }
     rule_manager = RuleManager(admin_mode=True, config=config)
-    users = get_users_display_names(rule_manager)
+    users = get_users_info(rule_manager)
 
     with open("instance_template_min.json", encoding='utf-8') as instance_file:
         json_instance_template = json.load(instance_file)
