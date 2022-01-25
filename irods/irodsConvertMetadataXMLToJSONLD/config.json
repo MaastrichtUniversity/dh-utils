@@ -1,8 +1,9 @@
 {
-  "instance_file": "instance_template_min.json",
-  "schema_file": "DataHub_extended_schema.json",
-  "xml_file": "metadata_min.xml",
-  "PID": "https://hdl.handle.net/21.T12996/P000000014C000000001",
+  "instance_file": "assets/instance_template_min.json",
+  "schema_file": "assets/DataHub_extended_schema.json",
+  "xml_file": "assets/metadata.xml",
+  "affiliation_mapping_file": "assets/affiliation_mapping.json",
+  "PID": "https://hdl.handle.net/21.T12996/P000000014C000000001.1",
   "creatorGivenName": "Jonathan",
   "creatorFamilyName": "Melius",
   "creator_username": "jmelius",

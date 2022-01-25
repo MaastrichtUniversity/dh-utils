@@ -1,3 +1,6 @@
+import json
+
+
 def add_date_value(value):
     return {
         "@value": value,
@@ -95,13 +98,10 @@ def add_keywords(keywords):
     return ret
 
 
-def add_contact_affiliation(contact):
+def add_contact_affiliation(affiliation, affiliation_mapping):
     ret = {}
-    if contact['Affiliation']:
-        ret = {
-            "rdfs:label": contact['Affiliation'],
-            "@id": "http://purl.org/zonmw/generic/10089"
-        }
+    if affiliation in affiliation_mapping:
+        ret = affiliation_mapping[affiliation]
     return ret
 
 
@@ -116,7 +116,9 @@ def add_contact_full_name(contact):
     return ret
 
 
-def add_contact_person(contacts):
+def add_contact_person(contacts, affiliation_mapping_path):
+    with open(affiliation_mapping_path, encoding='utf-8') as mapping_file:
+        affiliation_mapping = json.load(mapping_file)
     ret = []
     for contact in contacts:
         ret.append({
@@ -127,7 +129,7 @@ def add_contact_person(contacts):
             "contactFullName": {
                 "@value": add_contact_full_name(contact)
             },
-            "contactAffiliation": add_contact_affiliation(contact),
+            "contactAffiliation": add_contact_affiliation(contact['Affiliation'], affiliation_mapping),
             "contactPersonRole": {
                 "@value": contact['Role']
             },

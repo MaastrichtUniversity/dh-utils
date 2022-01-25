@@ -57,6 +57,7 @@ def get_avu_metadata(rule_manager, coll, users, project_id):
         print(f"Error: user info missing for {creator}/")
 
     ret = {
+        "affiliation_mapping_file": "assets/affiliation_mapping.json",
         "PID": f"https://hdl.handle.net/{pid}.1",
         "creatorGivenName": first_name,
         "creatorFamilyName": last_name,
@@ -138,7 +139,7 @@ def convert_collection_metadata(rule_manager, json_instance_template, users):
 
     # https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/release/customizable_metadata/core/static/assets/schemas/DataHub_general_schema.json?token=GHSAT0AAAAAABQNGBMEBRROAKZVV4K6ZBFUYPX6BOQ
     # TODO Get schema from github
-    with open("DataHub_extended_schema.json", encoding='utf-8') as schema_file:
+    with open("assets/DataHub_extended_schema.json", encoding='utf-8') as schema_file:
         json_schema = json.load(schema_file)
     schema_version = json_schema["pav:version"]
 
@@ -167,8 +168,6 @@ def convert_collection_metadata(rule_manager, json_instance_template, users):
             json_instance = Conversion(metadata_xml, json_instance_template, avu).get_instance()
 
             validate(instance=json_instance, schema=json_schema)
-            # TODO
-            #  affiliation mapping
 
             print(json.dumps(json_instance, ensure_ascii=False, indent=4))
 
@@ -236,7 +235,7 @@ def main():
     rule_manager = RuleManager(admin_mode=True, config=config)
     users = get_users_info(rule_manager)
 
-    with open("instance_template_min.json", encoding='utf-8') as instance_file:
+    with open("assets/instance_template_min.json", encoding='utf-8') as instance_file:
         json_instance_template = json.load(instance_file)
 
     convert_collection_metadata(rule_manager, json_instance_template, users)

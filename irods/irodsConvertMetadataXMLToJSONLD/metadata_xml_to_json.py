@@ -72,7 +72,8 @@ class Conversion:
         # "7_ContactPerson":
         contacts = read_contacts(self.xml_root)
         if len(contacts) != 0:
-            add_value_to_key(self.json_instance_template, "7_ContactPerson", add_contact_person(contacts))
+            add_value_to_key(self.json_instance_template, "7_ContactPerson",
+                             add_contact_person(contacts, self.avu_metadata["affiliation_mapping_file"]))
         else:
             # If there is no contact in metadata.xml, add the PI by default
             add_value_to_key(self.json_instance_template, "7_ContactPerson",
