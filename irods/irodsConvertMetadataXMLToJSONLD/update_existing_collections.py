@@ -12,14 +12,20 @@ from metadata_xml_to_json import Conversion
 
 
 class UpdateExistingCollections:
-    def __init__(self, rule_manager, users, json_instance_template, json_schema):
+    ERROR_COUNT = 0
+    WARNING_COUNT = 0
+    COLLECTION_DONE_COUNT = 0
+    COLLECTION_COUNT = 0
+
+    def __init__(self, rule_manager, json_instance_template, json_schema):
         self.rule_manager = rule_manager
-        self.users = users
         self.json_instance_template = json_instance_template
         self.json_schema = json_schema
 
+        self.users = self.get_users_info()
         self.session = rule_manager.session
         self.schema_version = json_schema["pav:version"]
+        self.original_pid_requested = False
 
     def read_metadata_xml(self, xml_path):
         try:
@@ -27,7 +33,8 @@ class UpdateExistingCollections:
                 metadata_xml = ET.fromstring(f.read())
         except (exception.DataObjectDoesNotExist, exception.SYS_FILE_DESC_OUT_OF_RANGE):
             metadata_xml = ""
-            print(f"\t Error: {xml_path} not found")
+            print(f"\t\t Error: {xml_path} not found")
+            self.ERROR_COUNT += 1
 
         return metadata_xml
 
@@ -42,15 +49,19 @@ class UpdateExistingCollections:
         try:
             pid = collection_object.metadata.get_one("PID").value
         except KeyError:
-            pid = ""
-            print(f"\t Warning: PID missing for {collection_object.path}/")
-            # TODO request PID if missing
+            print(f"\t\t Warning: PID missing for {collection_object.path}/")
+            self.WARNING_COUNT += 1
+            pid = self.register_original_pids(project_id, collection_object.name)
+            self.rule_manager.set_collection_avu(collection_object.path, "PID", pid)
+            print(f"\t\t Set avu PID({pid}) for {collection_object.path}")
+            self.original_pid_requested = True
 
         try:
             creator = collection_object.metadata.get_one("creator").value
         except KeyError:
             creator = ""
-            print(f"\t Warning: creator missing for {collection_object.path}/")
+            print(f"\t\t Warning: creator missing for {collection_object.path}/")
+            self.WARNING_COUNT += 1
 
         try:
             display_name = self.users[creator].display_name
@@ -62,7 +73,8 @@ class UpdateExistingCollections:
             first_name = ""
             last_name = ""
             creator_username = ""
-            print(f"\t Warning: user info missing for {creator}")
+            print(f"\t\t Warning: user info missing for {creator}")
+            self.WARNING_COUNT += 1
 
         ret = {
             "affiliation_mapping_file": "assets/affiliation_mapping.json",
@@ -72,11 +84,11 @@ class UpdateExistingCollections:
             "creator_username": creator_username,
             "submissionDate": f"{ctime.year}-{ctime.month}-{ctime.day}",
             "ctime": f"{ctime.year}-{ctime.month}-{ctime.day}T{ctime.hour}:{ctime.minute}:{ctime.second}",
-            "contributors": self.get_contributors(project_id)
+            "contributors": self.get_contributors(project_id),
         }
         return ret
 
-    def update_collection_metadata(self, project_id, collection_id):
+    def update_collection_avu(self, project_id, collection_id):
         destination_collection = f"/nlmumc/projects/{project_id}/{collection_id}"
 
         self.rule_manager.set_collection_avu(destination_collection, "latest_version_number", "1")
@@ -85,30 +97,53 @@ class UpdateExistingCollections:
         self.rule_manager.set_collection_avu(destination_collection, "schemaVersion", self.schema_version)
 
     def register_pids(self, project_id, collection_id):
-        destination_collection = f"/nlmumc/projects/{project_id}/{collection_id}"
+        if not self.original_pid_requested:
+            self.register_original_pids(project_id, collection_id)
+        self.register_version_pids(project_id, collection_id)
 
+    def register_original_pids(self, project_id, collection_id):
         # Requesting a PID via epicPID for version 0 (root version)
         handle_pids = self.rule_manager.get_versioned_pids(project_id, collection_id, "")
         if not handle_pids:
-            print(f"\t Retrieving multiple PID's failed for {destination_collection}, leaving blank")
+            print(f"\t\t Warning: Retrieving multiple PID's failed for {project_id}/{collection_id}, leaving blank")
+            self.WARNING_COUNT += 1
         elif handle_pids.collection["handle"] == "":
-            print(f"\t Retrieving PID for root collection failed for {destination_collection}, leaving blank")
+            print(
+                f"\t\t Warning: Retrieving PID for root collection failed for {project_id}/{collection_id},"
+                f" leaving blank"
+            )
+            self.WARNING_COUNT += 1
         elif handle_pids.schema["handle"] == "":
-            print(f"\t Retrieving PID for root collection schema failed for {destination_collection}, leaving blank")
+            print(
+                f"\t\t Warning: Retrieving PID for root collection schema failed for {project_id}/{collection_id},"
+                f" leaving blank"
+            )
+            self.WARNING_COUNT += 1
         elif handle_pids.instance["handle"] == "":
-            print(f"\t Retrieving PID for root collection instance failed for {destination_collection}, leaving blank")
+            print(
+                f"\t\t Warning: Retrieving PID for root collection instance failed for {project_id}/{collection_id},"
+                f" leaving blank"
+            )
+            self.WARNING_COUNT += 1
 
+        return handle_pids.collection["handle"]
+
+    def register_version_pids(self, project_id, collection_id):
         # Requesting PID's for Project Collection version 1 (includes instance and schema)
         handle_pids_version = self.rule_manager.get_versioned_pids(project_id, collection_id, "1")
         if not handle_pids_version:
-            print("\t Retrieving multiple PID's failed for {destination_collection} version 1, leaving blank")
+            print(
+                f"\t\t Warning: Retrieving multiple PID's failed for {project_id}/{collection_id} version 1,"
+                f" leaving blank"
+            )
+            self.WARNING_COUNT += 1
 
     def replace_collection_metadata(self, project_id, collection_id, pid, instance_object):
         destination_collection = f"/nlmumc/projects/{project_id}/{collection_id}"
         instance_path = f"{destination_collection}/instance.json"
-        instance_tmp = 'instance_tmp.json'
+        instance_tmp = "instance_tmp.json"
         schema_path = f"{destination_collection}/schema.json"
-        schema_tmp = 'schema_tmp.json'
+        schema_tmp = "schema_tmp.json"
         version = 1
 
         # Update @id of instance.json and schema.json
@@ -118,9 +153,9 @@ class UpdateExistingCollections:
         self.json_schema["@id"] = schema_url
 
         # Replace instance.json and schema.json in collection root
-        with open(instance_tmp, 'w') as instance_outfile:
+        with open(instance_tmp, "w") as instance_outfile:
             json.dump(instance_object, instance_outfile)
-        with open(schema_tmp, 'w') as schema_outfile:
+        with open(schema_tmp, "w") as schema_outfile:
             json.dump(self.json_schema, schema_outfile)
 
         try:
@@ -130,9 +165,13 @@ class UpdateExistingCollections:
 
             os.remove(instance_tmp)
             os.remove(schema_tmp)
-        except (exception.DataObjectDoesNotExist, exception.SYS_FILE_DESC_OUT_OF_RANGE, KeyError):
-            print(f"\t Error: during put operation")
-            return
+        except (
+            exception.DataObjectDoesNotExist,
+            exception.SYS_FILE_DESC_OUT_OF_RANGE,
+            KeyError,
+        ):
+            print(f"\t\t Error: during put operation")
+            self.ERROR_COUNT += 1
 
         # TODO Check if .metadata_versions
 
@@ -143,11 +182,13 @@ class UpdateExistingCollections:
     def convert_all_collections(self):
         projects_root = self.session.collections.get("/nlmumc/projects")
         for project in projects_root.subcollections:
+            print(f"* Looping over project {project.name}")
             for collection in project.subcollections:
                 self.convert_collection_metadata(project.name, collection.name, collection)
 
     def convert_collection_metadata(self, project_id, collection_id, collection_object):
-        print(f"* Processing {project_id}/{collection_id}")
+        print(f"\t- Processing {project_id}/{collection_id}")
+        self.COLLECTION_COUNT += 1
         session = self.rule_manager.session
 
         # TODO  Add check if instance/schema already exist
@@ -157,7 +198,8 @@ class UpdateExistingCollections:
         xml_path = f"/nlmumc/projects/{project_id}/{collection_id}/metadata.xml"
         metadata_xml = self.read_metadata_xml(xml_path)
         if metadata_xml == "":
-            print(f"\t Error: Skip conversion for {xml_path}")
+            print(f"\t\t Error: Skip conversion for {xml_path}")
+            self.ERROR_COUNT += 1
             self.rule_manager.close_project_collection(project_id, collection_id)
             return
 
@@ -169,11 +211,12 @@ class UpdateExistingCollections:
         # print(json.dumps(json_instance, ensure_ascii=False, indent=4))
 
         self.register_pids(project_id, collection_id)
-        self.update_collection_metadata(project_id, collection_id)
+        self.update_collection_avu(project_id, collection_id)
         self.replace_collection_metadata(project_id, collection_id, avu["PID"], json_instance)
 
         self.rule_manager.close_project_collection(project_id, collection_id)
-        print("\t Done")
+        print("\t\t Conversion done")
+        self.COLLECTION_DONE_COUNT += 1
 
     def get_contributors(self, project_id):
         result = self.rule_manager.get_project_contributors_metadata(project_id)
@@ -183,7 +226,7 @@ class UpdateExistingCollections:
                 "contributorFamilyName": result.data_steward.family_name,
                 "contributorType": {
                     "rdfs:label": "data manager",
-                    "@id": "http://purl.org/zonmw/generic/10077"
+                    "@id": "http://purl.org/zonmw/generic/10077",
                 },
                 "contributorGivenName": result.data_steward.given_name,
                 "contributorEmail": result.data_steward.email,
@@ -193,22 +236,21 @@ class UpdateExistingCollections:
                 "contributorFamilyName": result.principal_investigator.family_name,
                 "contributorType": {
                     "rdfs:label": "project manager",
-                    "@id": "http://purl.org/zonmw/generic/10082"
+                    "@id": "http://purl.org/zonmw/generic/10082",
                 },
                 "contributorGivenName": result.principal_investigator.given_name,
                 "contributorEmail": result.principal_investigator.email,
-            }
+            },
         }
 
+    def get_users_info(self):
+        ret = {}
+        result = self.rule_manager.get_users("false")
+        for user in result.users:
+            email = self.rule_manager.get_username_attribute_value(user.user_name, "email")
+            ret[email.value] = user
 
-def get_users_info(rule_manager):
-    ret = {}
-    result = rule_manager.get_users("false")
-    for user in result.users:
-        email = rule_manager.get_username_attribute_value(user.user_name, "email")
-        ret[email.value] = user
-
-    return ret
+        return ret
 
 
 def main():
@@ -228,23 +270,27 @@ def main():
         "IRODS_HOST": host,
         "IRODS_USER": username,
         "IRODS_PASS": password,
-        "IRODS_CLIENT_SERVER_POLICY": "CS_NEG_REQUIRE"
+        "IRODS_CLIENT_SERVER_POLICY": "CS_NEG_REQUIRE",
     }
     rule_manager = RuleManager(admin_mode=True, config=config)
-    users = get_users_info(rule_manager)
 
-    with open("assets/instance_template_min.json", encoding='utf-8') as instance_file:
+    with open("assets/instance_template_min.json", encoding="utf-8") as instance_file:
         json_instance_template = json.load(instance_file)
 
     # https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/release/customizable_metadata/core/static/assets/schemas/DataHub_general_schema.json?token=GHSAT0AAAAAABQNGBMEBRROAKZVV4K6ZBFUYPX6BOQ
     # TODO Get schema from github
-    with open("assets/DataHub_extended_schema.json", encoding='utf-8') as schema_file:
+    with open("assets/DataHub_extended_schema.json", encoding="utf-8") as schema_file:
         json_schema = json.load(schema_file)
 
-    converter = UpdateExistingCollections(rule_manager, users, json_instance_template, json_schema)
+    converter = UpdateExistingCollections(rule_manager, json_instance_template, json_schema)
     converter.convert_all_collections()
 
     rule_manager.session.cleanup()
+
+    print("Summary:")
+    print(f"\t {converter.COLLECTION_DONE_COUNT}/{converter.COLLECTION_COUNT} collection(s) converted")
+    print(f"\t {converter.ERROR_COUNT} error(s) encountered")
+    print(f"\t {converter.WARNING_COUNT} warning(s) encountered")
 
 
 if __name__ == "__main__":
