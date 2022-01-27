@@ -8,7 +8,7 @@ from irods import exception
 from irods.exception import CollectionDoesNotExist, NoResultFound
 from irods.models import Collection as iRODSCollection
 from irodsrulewrapper.rule import RuleManager
-from irodsrulewrapper.utils import check_project_collection_path_format
+from irodsrulewrapper.utils import check_project_collection_path_format, convert_to_current_timezone
 from jsonschema import validate
 
 from metadata_xml_to_json import Conversion
@@ -90,8 +90,8 @@ class UpdateExistingCollections:
             "creatorGivenName": first_name,
             "creatorFamilyName": last_name,
             "creator_username": creator_username,
-            "submissionDate": f"{ctime.year}-{ctime.month}-{ctime.day}",
-            "ctime": f"{ctime.year}-{ctime.month}-{ctime.day}T{ctime.hour}:{ctime.minute}:{ctime.second}",
+            "submissionDate": convert_to_current_timezone(ctime, "%Y-%m-%d"),
+            "ctime": convert_to_current_timezone(ctime, "%Y-%m-%dT%H:%M:%S"),
             "contributors": self.get_contributors(project_id),
         }
         return ret
@@ -219,10 +219,12 @@ class UpdateExistingCollections:
 
         if not self.force_flag and self.rule_manager.session.data_objects.exists(instance_path):
             print(f"\t\t Error: File {instance_path} already exist")
+            print(f"\t\t Error: Skip conversion for {collection_object.path}")
             self.ERROR_COUNT += 1
             return
         if not self.force_flag and self.rule_manager.session.data_objects.exists(schema_path):
             print(f"\t\t Error: File {schema_path} already exist")
+            print(f"\t\t Error: Skip conversion for {collection_object.path}")
             self.ERROR_COUNT += 1
             return
 
@@ -291,12 +293,9 @@ class UpdateExistingCollections:
 
 
 def main():
-    # host = input("Enter your iRODS host:")
-    # username = input("Enter your iRODS username:")
-    # password = input("Enter your IRODS password:")
-    host = "irods.dh.local"
-    username = "rods"
-    password = "irods"
+    host = input("Enter your iRODS host:")
+    username = input("Enter your iRODS username:")
+    password = input("Enter your IRODS password:")
 
     parser = argparse.ArgumentParser(description="update_existing_collections description")
     parser.add_argument("-f", "--force-flag", action="store_true", help="Overwrite existing metadata files")
