@@ -1,5 +1,5 @@
-import json
 import sys
+import urllib.request
 import xml.etree.cElementTree as ET
 
 from jsonschema import validate
@@ -50,7 +50,7 @@ class Conversion:
 
     def add_title(self):
         # "3_Title":
-        title = read_text(self.xml_root, 'title')
+        title = read_text(self.xml_root, "title")
         add_value_to_key(self.json_instance_template, "title", {"@value": title})
 
     def add_publisher(self):
@@ -65,19 +65,26 @@ class Conversion:
 
     def add_contributor(self):
         # "7_Contributor":
-        add_value_to_key(self.json_instance_template, "7_Contributor",
-                         add_contributors(self.avu_metadata['contributors']))
+        add_value_to_key(
+            self.json_instance_template, "7_Contributor", add_contributors(self.avu_metadata["contributors"])
+        )
 
     def add_contact(self):
         # "7_ContactPerson":
         contacts = read_contacts(self.xml_root)
         if len(contacts) != 0:
-            add_value_to_key(self.json_instance_template, "7_ContactPerson",
-                             add_contact_person(contacts, self.avu_metadata["affiliation_mapping_file"]))
+            add_value_to_key(
+                self.json_instance_template,
+                "7_ContactPerson",
+                add_contact_person(contacts, self.avu_metadata["affiliation_mapping_file"]),
+            )
         else:
             # If there is no contact in metadata.xml, add the PI by default
-            add_value_to_key(self.json_instance_template, "7_ContactPerson",
-                             add_pi_contact(self.avu_metadata["contributors"]["project manager"]))
+            add_value_to_key(
+                self.json_instance_template,
+                "7_ContactPerson",
+                add_pi_contact(self.avu_metadata["contributors"]["project manager"]),
+            )
 
     def add_date(self):
         # "8_Date":
@@ -96,7 +103,7 @@ class Conversion:
 
     def add_description(self):
         # "17_Description":
-        description = read_text(self.xml_root, 'description')
+        description = read_text(self.xml_root, "description")
         add_value_to_key(self.json_instance_template, "Description", {"@value": description})
 
     def add_extended_date(self):
@@ -124,20 +131,21 @@ def main():
     if not args:
         raise SystemExit(USAGE)
 
-    with open(args[0], encoding='utf-8') as config_file:
+    with open(args[0], encoding="utf-8") as config_file:
         avu_metadata = json.load(config_file)
 
-    with open(avu_metadata["instance_file"], encoding='utf-8') as instance_file:
+    with open(avu_metadata["instance_file"], encoding="utf-8") as instance_file:
         json_instance_template = json.load(instance_file)
 
-    with open(avu_metadata["schema_file"], encoding='utf-8') as schema_file:
-        template_schema = json.load(schema_file)
+    schema_url = "https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/DHS-1825/core/static/assets/schemas/DataHub_extended_schema.json?token=GHSAT0AAAAAABQNGBMEXKMEBOGVUOHPE6E4YP3VB6Q"
+    with urllib.request.urlopen(schema_url) as url:
+        json_schema = json.loads(url.read().decode())
 
-    with open(avu_metadata["xml_file"], encoding='utf-8') as xml_file:
+    with open(avu_metadata["xml_file"], encoding="utf-8") as xml_file:
         xml_root = ET.fromstring(xml_file.read())
 
     json_instance = Conversion(xml_root, json_instance_template, avu_metadata).get_instance()
-    validate(instance=json_instance, schema=template_schema)
+    validate(instance=json_instance, schema=json_schema)
 
     print(json.dumps(json_instance, ensure_ascii=False, indent=4))
 

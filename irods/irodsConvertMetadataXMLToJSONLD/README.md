@@ -29,6 +29,16 @@ python3 metadata_xml_to_json.py [path to the config file]
 python3 metadata_xml_to_json.py config.json 
 
 # To update existing metadata.xml inside project collections
-python3 update_existing_collections.py 
+python3 update_existing_collections.py [-h] [-f] [-c] [-v]
+                                      [-p PROJECT_COLLECTION_PATH]
 
+update_existing_collections description
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -f, --force-flag      Overwrite existing metadata files
+  -c, --commit          Commit to upload the converted file
+  -v, --verbose         Print the converted instance.json
+  -p PROJECT_COLLECTION_PATH, --project-collection-path PROJECT_COLLECTION_PATH
+                        The absolute path of the project collection to convert
 ```

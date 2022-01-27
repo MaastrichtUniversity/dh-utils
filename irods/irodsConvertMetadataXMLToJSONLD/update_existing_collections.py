@@ -1,11 +1,14 @@
 import json
 import os
 import xml.etree.cElementTree as ET
+import urllib.request
+import argparse
 
 from irods import exception
 from irods.exception import CollectionDoesNotExist, NoResultFound
 from irods.models import Collection as iRODSCollection
 from irodsrulewrapper.rule import RuleManager
+from irodsrulewrapper.utils import check_project_collection_path_format
 from jsonschema import validate
 
 from metadata_xml_to_json import Conversion
@@ -17,7 +20,7 @@ class UpdateExistingCollections:
     COLLECTION_DONE_COUNT = 0
     COLLECTION_COUNT = 0
 
-    def __init__(self, rule_manager, json_instance_template, json_schema):
+    def __init__(self, rule_manager, json_instance_template, json_schema, args):
         self.rule_manager = rule_manager
         self.json_instance_template = json_instance_template
         self.json_schema = json_schema
@@ -26,6 +29,11 @@ class UpdateExistingCollections:
         self.session = rule_manager.session
         self.schema_version = json_schema["pav:version"]
         self.original_pid_requested = False
+
+        self.force_flag = args.force_flag
+        self.commit = args.commit
+        self.project_collection_path = args.project_collection_path
+        self.verbose = args.verbose
 
     def read_metadata_xml(self, xml_path):
         try:
@@ -158,13 +166,32 @@ class UpdateExistingCollections:
         with open(schema_tmp, "w") as schema_outfile:
             json.dump(self.json_schema, schema_outfile)
 
-        try:
-            # TODO create object is doesn't exist
-            self.rule_manager.session.data_objects.put(instance_tmp, instance_path)
-            self.rule_manager.session.data_objects.put(schema_tmp, schema_path)
+        status = 0
+        status += self.upload_file(instance_tmp, instance_path)
+        status += self.upload_file(schema_tmp, schema_path)
 
-            os.remove(instance_tmp)
-            os.remove(schema_tmp)
+        # Create a copy of instance.json and schema.json in .metadata_versions
+        # Create metadata_versions and copy schema and instance from root to that folder as version 1
+        version_folder_path = destination_collection + "/.metadata_versions"
+        version_schema_path = version_folder_path + "/schema.1.json"
+        version_instance_path = version_folder_path + "/instance.1.json"
+        if not self.session.collections.exists(version_folder_path):
+            self.session.collections.create(version_folder_path)
+        status += self.upload_file(instance_tmp, version_instance_path)
+        status += self.upload_file(schema_tmp, version_schema_path)
+
+        os.remove(instance_tmp)
+        os.remove(schema_tmp)
+        return status
+
+    def upload_file(self, source_file, destination_path):
+        if not self.force_flag and self.rule_manager.session.data_objects.exists(destination_path):
+            print(f"\t\t Error: {destination_path} already exists")
+
+            return 1
+
+        try:
+            self.rule_manager.session.data_objects.put(source_file, destination_path)
         except (
             exception.DataObjectDoesNotExist,
             exception.SYS_FILE_DESC_OUT_OF_RANGE,
@@ -173,11 +200,7 @@ class UpdateExistingCollections:
             print(f"\t\t Error: during put operation")
             self.ERROR_COUNT += 1
 
-        # TODO Check if .metadata_versions
-
-        # Create a copy of instance.json and schema.json in .metadata_versions
-        # Create metadata_versions and copy schema and instance from root to that folder as version 1
-        self.rule_manager.create_ingest_metadata_versions(project_id, collection_id)
+        return 0
 
     def convert_all_collections(self):
         projects_root = self.session.collections.get("/nlmumc/projects")
@@ -191,16 +214,23 @@ class UpdateExistingCollections:
         self.COLLECTION_COUNT += 1
         session = self.rule_manager.session
 
-        # TODO  Add check if instance/schema already exist
+        instance_path = f"{collection_object.path}/instance.json"
+        schema_path = f"{collection_object.path}/schema.json"
 
-        self.rule_manager.open_project_collection(project_id, collection_id, session.username, "own")
+        if not self.force_flag and self.rule_manager.session.data_objects.exists(instance_path):
+            print(f"\t\t Error: File {instance_path} already exist")
+            self.ERROR_COUNT += 1
+            return
+        if not self.force_flag and self.rule_manager.session.data_objects.exists(schema_path):
+            print(f"\t\t Error: File {schema_path} already exist")
+            self.ERROR_COUNT += 1
+            return
 
         xml_path = f"/nlmumc/projects/{project_id}/{collection_id}/metadata.xml"
         metadata_xml = self.read_metadata_xml(xml_path)
         if metadata_xml == "":
             print(f"\t\t Error: Skip conversion for {xml_path}")
             self.ERROR_COUNT += 1
-            self.rule_manager.close_project_collection(project_id, collection_id)
             return
 
         avu = self.get_avu_metadata(collection_object, project_id)
@@ -208,13 +238,20 @@ class UpdateExistingCollections:
 
         validate(instance=json_instance, schema=self.json_schema)
 
-        # print(json.dumps(json_instance, ensure_ascii=False, indent=4))
+        if self.verbose:
+            print(json.dumps(json_instance, ensure_ascii=False, indent=4))
 
-        self.register_pids(project_id, collection_id)
-        self.update_collection_avu(project_id, collection_id)
-        self.replace_collection_metadata(project_id, collection_id, avu["PID"], json_instance)
+        if self.commit:
+            self.rule_manager.open_project_collection(project_id, collection_id, session.username, "own")
+            self.register_pids(project_id, collection_id)
+            self.update_collection_avu(project_id, collection_id)
+            status = self.replace_collection_metadata(project_id, collection_id, avu["PID"], json_instance)
+            self.rule_manager.close_project_collection(project_id, collection_id)
+            if status == 0:
+                print("\t\t Upload done")
+            else:
+                print("\t\t Upload uncompleted")
 
-        self.rule_manager.close_project_collection(project_id, collection_id)
         print("\t\t Conversion done")
         self.COLLECTION_DONE_COUNT += 1
 
@@ -261,10 +298,17 @@ def main():
     username = "rods"
     password = "irods"
 
-    # TODO
-    # force-flag
-    # dry-mode
-    # commit
+    parser = argparse.ArgumentParser(description="update_existing_collections description")
+    parser.add_argument("-f", "--force-flag", action="store_true", help="Overwrite existing metadata files")
+    parser.add_argument("-c", "--commit", action="store_true", help="Commit to upload the converted file")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print the converted instance.json")
+    parser.add_argument(
+        "-p", "--project-collection-path", type=str, help="The absolute path of the project collection to convert"
+    )
+    args = parser.parse_args()
+
+    if args.project_collection_path and not check_project_collection_path_format(args.project_collection_path):
+        exit(f"Wrong project collection path {args.project_collection_path}")
 
     config = {
         "IRODS_HOST": host,
@@ -277,13 +321,20 @@ def main():
     with open("assets/instance_template_min.json", encoding="utf-8") as instance_file:
         json_instance_template = json.load(instance_file)
 
-    # https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/release/customizable_metadata/core/static/assets/schemas/DataHub_general_schema.json?token=GHSAT0AAAAAABQNGBMEBRROAKZVV4K6ZBFUYPX6BOQ
-    # TODO Get schema from github
-    with open("assets/DataHub_extended_schema.json", encoding="utf-8") as schema_file:
-        json_schema = json.load(schema_file)
+    schema_url = "https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/DHS-1825/core/static/assets/schemas/DataHub_extended_schema.json?token=GHSAT0AAAAAABQNGBMEXKMEBOGVUOHPE6E4YP3VB6Q"
+    with urllib.request.urlopen(schema_url) as url:
+        json_schema = json.loads(url.read().decode())
 
-    converter = UpdateExistingCollections(rule_manager, json_instance_template, json_schema)
-    converter.convert_all_collections()
+    converter = UpdateExistingCollections(rule_manager, json_instance_template, json_schema, args)
+
+    if args.project_collection_path:
+        split = args.project_collection_path.split("/")
+        project_id = split[3]
+        collection_id = split[4]
+        collection_object = rule_manager.session.collections.get(args.project_collection_path)
+        converter.convert_collection_metadata(project_id, collection_id, collection_object)
+    else:
+        converter.convert_all_collections()
 
     rule_manager.session.cleanup()
 
