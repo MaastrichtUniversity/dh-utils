@@ -123,7 +123,7 @@ class Conversion:
         add_value_to_key(self.json_instance_template, "technique", add_ontology_value(technology))
 
 
-USAGE = f"Usage: python {sys.argv[0]} [configuration file path]"
+USAGE = f"Usage: python {sys.argv[0]} [configuration file path] [instance.json output file path]"
 
 
 def main():
@@ -133,6 +133,10 @@ def main():
 
     with open(args[0], encoding="utf-8") as config_file:
         avu_metadata = json.load(config_file)
+
+    output = "instance.json"
+    if len(args) > 1:
+        output = args[1]
 
     with open(avu_metadata["instance_file"], encoding="utf-8") as instance_file:
         json_instance_template = json.load(instance_file)
@@ -146,6 +150,10 @@ def main():
 
     json_instance = Conversion(xml_root, json_instance_template, avu_metadata).get_instance()
     validate(instance=json_instance, schema=json_schema)
+
+    # Write instance.json
+    with open(output, "w") as instance_outfile:
+        json.dump(json_instance, instance_outfile, ensure_ascii=False, indent=4)
 
     print(json.dumps(json_instance, ensure_ascii=False, indent=4))
 
