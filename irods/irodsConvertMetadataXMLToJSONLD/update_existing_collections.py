@@ -59,10 +59,11 @@ class UpdateExistingCollections:
         except KeyError:
             print(f"\t\t Warning: PID missing for {collection_object.path}/")
             self.WARNING_COUNT += 1
-            pid = self.register_original_pids(project_id, collection_object.name)
-            self.rule_manager.set_collection_avu(collection_object.path, "PID", pid)
-            print(f"\t\t Set avu PID({pid}) for {collection_object.path}")
-            self.original_pid_requested = True
+            if self.commit:
+                pid = self.register_original_pids(project_id, collection_object.name)
+                self.rule_manager.set_collection_avu(collection_object.path, "PID", pid)
+                print(f"\t\t Set avu PID({pid}) for {collection_object.path}")
+                self.original_pid_requested = True
 
         try:
             creator = collection_object.metadata.get_one("creator").value
@@ -86,7 +87,8 @@ class UpdateExistingCollections:
 
         ret = {
             "affiliation_mapping_file": "assets/affiliation_mapping.json",
-            "PID": f"https://hdl.handle.net/{pid}.1",
+            "base_PID": f"https://hdl.handle.net/{pid}",
+            "version_PID": f"https://hdl.handle.net/{pid}.1",
             "creatorGivenName": first_name,
             "creatorFamilyName": last_name,
             "creator_username": creator_username,
@@ -232,7 +234,6 @@ class UpdateExistingCollections:
         metadata_xml = self.read_metadata_xml(xml_path)
         if metadata_xml == "":
             print(f"\t\t Error: Skip conversion for {xml_path}")
-            self.ERROR_COUNT += 1
             return
 
         avu = self.get_avu_metadata(collection_object, project_id)
@@ -240,19 +241,19 @@ class UpdateExistingCollections:
 
         validate(instance=json_instance, schema=self.json_schema)
 
-        if self.verbose:
-            print(json.dumps(json_instance, ensure_ascii=False, indent=4))
-
         if self.commit:
             self.rule_manager.open_project_collection(project_id, collection_id, session.username, "own")
             self.register_pids(project_id, collection_id)
             self.update_collection_avu(project_id, collection_id)
-            status = self.replace_collection_metadata(project_id, collection_id, avu["PID"], json_instance)
+            status = self.replace_collection_metadata(project_id, collection_id, avu["base_PID"], json_instance)
             self.rule_manager.close_project_collection(project_id, collection_id)
             if status == 0:
                 print("\t\t Upload done")
             else:
                 print("\t\t Upload uncompleted")
+
+        if self.verbose:
+            print(json.dumps(json_instance, ensure_ascii=False, indent=4))
 
         print("\t\t Conversion done")
         self.COLLECTION_DONE_COUNT += 1
@@ -286,7 +287,7 @@ class UpdateExistingCollections:
         ret = {}
         result = self.rule_manager.get_users("false")
         for user in result.users:
-            email = self.rule_manager.get_username_attribute_value(user.user_name, "email")
+            email = self.rule_manager.get_username_attribute_value(user.user_name, "email", "false")
             ret[email.value] = user
 
         return ret

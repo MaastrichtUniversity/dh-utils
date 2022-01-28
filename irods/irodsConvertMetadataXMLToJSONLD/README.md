@@ -25,8 +25,8 @@ pip install -e git+https://github.com/MaastrichtUniversity/irods-rule-wrapper.gi
 source ./venv3/bin/activate
 
 # To convert local metadata.xml
-python3 metadata_xml_to_json.py [path to the config file]
-python3 metadata_xml_to_json.py config.json 
+python3 metadata_xml_to_json.py [path to the config file] [output instance json path]
+python3 metadata_xml_to_json.py config.json instance.json
 
 # To update existing metadata.xml inside project collections
 python3 update_existing_collections.py [-h] [-f] [-c] [-v]

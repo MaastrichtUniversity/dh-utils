@@ -41,7 +41,7 @@ class Conversion:
 
     def add_identifier(self):
         # "1_Identifier":
-        pid = self.avu_metadata["PID"]
+        pid = self.avu_metadata["version_PID"]
         add_value_to_key(self.json_instance_template, "datasetIdentifier", {"@value": pid})
 
     def add_creator(self):
