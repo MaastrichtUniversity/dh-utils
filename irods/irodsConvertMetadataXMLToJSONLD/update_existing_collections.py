@@ -321,7 +321,7 @@ def main():
     with open("assets/instance_template_min.json", encoding="utf-8") as instance_file:
         json_instance_template = json.load(instance_file)
 
-    schema_url = "https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/DHS-1825/core/static/assets/schemas/DataHub_extended_schema.json?token=GHSAT0AAAAAABQNGBMEXKMEBOGVUOHPE6E4YP3VB6Q"
+    schema_url = "https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/release/customizable_metadata/core/static/assets/schemas/DataHub_extended_schema.json?token=GHSAT0AAAAAABQNGBMFCMVM2BPHP4EEM65QYQA6BLA"
     with urllib.request.urlopen(schema_url) as url:
         json_schema = json.loads(url.read().decode())
 
