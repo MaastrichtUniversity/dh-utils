@@ -9,7 +9,7 @@
 ## How to install the dependencies
 ```
 sudo apt-get install python3-virtualenv
-virtualenv --python=python3 venv3
+python3 -m virtualenv --python=python3 venv3
 source ./venv3/bin/activate
 
 pip install jsonschema
