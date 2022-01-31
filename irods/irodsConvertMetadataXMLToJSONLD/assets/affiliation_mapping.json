@@ -1,0 +1,119 @@
+{
+  "IBD specialist": {},
+  "AzM & UM": {
+    "rdfs:label": "Maastricht University Medical Centre",
+    "@id": "http://purl.org/zonmw/generic/10046"
+  },
+  "AzM/ MUMC dept. gastroenterology and hepatology, and, Maastricht University FHML NUTRIM DIV. II": {
+    "rdfs:label": "Maastricht University Medical Centre",
+    "@id": "http://purl.org/zonmw/generic/10046"
+  },
+  "cBITE, MERLN, Maastricht University": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "cBITE, MERLN, MAastricht University": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "CBITE, MERLN, Maastricht University": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "DataHub": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "General Surgery": {
+    "rdfs:label": "Maastricht University Medical Centre",
+    "@id": "http://purl.org/zonmw/generic/10046"
+  },
+  "m4i": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "M4I": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "M4I - IMS": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "M4I IMS Maastricht University": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "M4I-IMS": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "Maastricht University": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "Maastricht University - M4I - division of Imaging Mass Spectrometry": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "Maastricht University - M4I division of Imaging Mass Spectrometry": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "Maastricht University FHML NUTRIM DIV. II": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "Medical specialist, gastroenterology, subspecialization on IBD": {
+    "rdfs:label": "Maastricht University Medical Centre",
+    "@id": "http://purl.org/zonmw/generic/10046"
+  },
+  "MERLIN": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "MUMC Pathology": {
+    "rdfs:label": "Maastricht University Medical Centre",
+    "@id": "http://purl.org/zonmw/generic/10046"
+  },
+  "Nanoscopy": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "PhD candidate gastroenterology department Maastricht University/ MUMC, AzM": {
+    "rdfs:label": "Maastricht University Medical Centre",
+    "@id": "http://purl.org/zonmw/generic/10046"
+  },
+  "Professor and scientific director, lead researcher gastroenterology department MUMC and Maastricht University": {
+    "rdfs:label": "Maastricht University Medical Centre",
+    "@id": "http://purl.org/zonmw/generic/10046"
+  },
+  "RIVM": {
+    "rdfs:label": "RIVM - National Institute for Public Health and the Environment",
+    "@id": "http://purl.org/zonmw/generic/10056"
+  },
+  "Technical University Eindhoven": {
+    "rdfs:label": "Eindhoven University of Technology",
+    "@id": "http://purl.org/zonmw/generic/10031"
+  },
+  "The D-Lab": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "UM Neuropsychiatry": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "UM-M4I-IMS": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "University of Maastricht, M4I": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  },
+  "University of Maastricht, NP": {
+    "rdfs:label": "Maastricht University",
+    "@id": "http://purl.org/zonmw/generic/10045"
+  }
+}
