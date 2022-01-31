@@ -112,7 +112,7 @@ def read_contacts(root):
 
 
 def read_tag(root, tag):
-    if root.find(tag).text is not None:
+    if root.find(tag) is not None and root.find(tag).text is not None:
         # Check if the xml tag exist and if it contains an ontology class
         if root.find(tag).get("id") is not None and ":http:" in root.find(tag).get("id"):
             return {"id": root.find(tag).get("id"), "label": root.find(tag).text}
