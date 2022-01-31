@@ -2,7 +2,7 @@
   "@id": "https://repo.metadatacenter.org/templates/7449e6a7-7d6d-4194-a0f1-971d64c8d361",
   "schema:isBasedOn": "https://repo.metadatacenter.org/templates/7449e6a7-7d6d-4194-a0f1-971d64c8d361",
   "schema:name": "DataHub Extended Template",
-  "schema:description": "This is the basic DataHub General Template",
+  "schema:description": "This is the basic DataHub extended Template",
   "pav:createdOn": "2022-01-21T11:50:23",
   "pav:createdBy": "https://mdr.datahubmaastricht.nl/user/jmelius",
   "pav:lastUpdatedOn": "2022-01-21T11:50:23",
