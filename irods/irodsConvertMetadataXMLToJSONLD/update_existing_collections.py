@@ -61,6 +61,9 @@ class UpdateExistingCollections:
             pid = ""
             self.WARNING_COUNT += 1
             if self.commit:
+                self.rule_manager.open_project_collection(
+                    project_id, collection_object.name, self.rule_manager.session.username, "own"
+                )
                 pid = self.register_original_pids(project_id, collection_object.name)
                 self.rule_manager.set_collection_avu(collection_object.path, "PID", pid)
                 print(f"\t\t Set avu PID({pid}) for {collection_object.path}")
@@ -245,7 +248,8 @@ class UpdateExistingCollections:
         validate(instance=json_instance, schema=self.json_schema)
 
         if self.commit:
-            self.rule_manager.open_project_collection(project_id, collection_id, session.username, "own")
+            if not self.original_pid_requested:
+                self.rule_manager.open_project_collection(project_id, collection_id, session.username, "own")
             self.register_pids(project_id, collection_id)
             self.update_collection_avu(project_id, collection_id)
             status = self.replace_collection_metadata(project_id, collection_id, avu["base_PID"], json_instance)
