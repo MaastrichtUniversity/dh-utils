@@ -58,6 +58,7 @@ class UpdateExistingCollections:
             pid = collection_object.metadata.get_one("PID").value
         except KeyError:
             print(f"\t\t Warning: PID missing for {collection_object.path}/")
+            pid = ""
             self.WARNING_COUNT += 1
             if self.commit:
                 pid = self.register_original_pids(project_id, collection_object.name)
