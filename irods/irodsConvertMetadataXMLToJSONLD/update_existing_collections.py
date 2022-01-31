@@ -215,6 +215,7 @@ class UpdateExistingCollections:
             print(f"* Looping over project {project.name} ({contributors['data manager']['contributorFullName']})")
             for collection in project.subcollections:
                 self.convert_collection_metadata(project.name, collection.name, collection)
+                self.original_pid_requested = False
 
     def convert_collection_metadata(self, project_id, collection_id, collection_object):
         print(f"\t- Processing {project_id}/{collection_id}")
