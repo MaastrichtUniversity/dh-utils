@@ -13,6 +13,8 @@ class Conversion:
         self.xml_root = xml_root
         self.json_instance_template = json_instance_template
         self.avu_metadata = avu_metadata
+        self.ERROR_COUNT = 0
+        self.WARNING_COUNT = 0
 
     def get_instance(self):
         self.add_identifier()
@@ -71,7 +73,8 @@ class Conversion:
 
     def add_contact(self):
         # "7_ContactPerson":
-        contacts = read_contacts(self.xml_root)
+        contacts, count = read_contacts(self.xml_root)
+        self.WARNING_COUNT += count
         if len(contacts) != 0:
             add_value_to_key(
                 self.json_instance_template,

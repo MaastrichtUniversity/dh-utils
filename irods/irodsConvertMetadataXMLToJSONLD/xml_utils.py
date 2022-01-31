@@ -93,6 +93,7 @@ def read_text(root, tag):
 
 def read_contacts(root):
     contacts = []
+    count = 0
     for contact in root.findall("contact"):
         contact_object = {
             "FirstName": contact.find("firstName").text,
@@ -107,8 +108,16 @@ def read_contacts(root):
         if not is_invalid_contact(contact_object):
             # contacts.append(add_contact_value(contact))
             contacts.append(contact_object)
+        else:
+            if not (
+                contact_object["LastName"] is None
+                and contact_object["FirstName"] is None
+                and contact_object["Email"] is None
+            ):
+                print(f"\t\t Warning: invalid contact {contact_object}")
+                count = 1
 
-    return contacts
+    return contacts, count
 
 
 def read_tag(root, tag):
@@ -132,13 +141,4 @@ def read_tag_node(root, tag):
 
 
 def is_invalid_contact(contact):
-    return (
-        contact["LastName"] is None
-        and contact["FirstName"] is None
-        and contact["MidInitials"] is None
-        and contact["Email"] is None
-        and contact["Phone"] is None
-        and contact["Address"] is None
-        and contact["Affiliation"] is None
-        and contact["Role"] is None
-    )
+    return contact["LastName"] is None or contact["FirstName"] is None or contact["Email"] is None

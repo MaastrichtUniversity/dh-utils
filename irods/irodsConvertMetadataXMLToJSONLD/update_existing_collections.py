@@ -208,7 +208,8 @@ class UpdateExistingCollections:
     def convert_all_collections(self):
         projects_root = self.session.collections.get("/nlmumc/projects")
         for project in projects_root.subcollections:
-            print(f"* Looping over project {project.name}")
+            contributors = self.get_contributors(project.name)
+            print(f"* Looping over project {project.name} ({contributors['data manager']['contributorFullName']})")
             for collection in project.subcollections:
                 self.convert_collection_metadata(project.name, collection.name, collection)
 
@@ -238,8 +239,9 @@ class UpdateExistingCollections:
             return
 
         avu = self.get_avu_metadata(collection_object, project_id)
-        json_instance = Conversion(metadata_xml, self.json_instance_template, avu).get_instance()
-
+        conversion = Conversion(metadata_xml, self.json_instance_template, avu)
+        json_instance = conversion.get_instance()
+        self.WARNING_COUNT += conversion.WARNING_COUNT
         validate(instance=json_instance, schema=self.json_schema)
 
         if self.commit:
