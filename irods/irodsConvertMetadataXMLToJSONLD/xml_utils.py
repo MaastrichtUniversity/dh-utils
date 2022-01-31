@@ -86,7 +86,7 @@ def read_tag_list(root, tag):
 def read_text(root, tag):
     text = root.find(tag).text
     if text is None:
-        return ''
+        return ""
     else:
         return text
 
@@ -94,14 +94,16 @@ def read_text(root, tag):
 def read_contacts(root):
     contacts = []
     for contact in root.findall("contact"):
-        contact_object = {"FirstName": contact.find('firstName').text,
-                          "LastName": contact.find('lastName').text,
-                          "MidInitials": contact.find('midInitials').text,
-                          "Email": contact.find('email').text,
-                          "Phone": contact.find('phone').text,
-                          "Address": contact.find('address').text,
-                          "Affiliation": contact.find('affiliation').text,
-                          "Role": contact.find('role').text}
+        contact_object = {
+            "FirstName": contact.find("firstName").text,
+            "LastName": contact.find("lastName").text,
+            "MidInitials": contact.find("midInitials").text,
+            "Email": contact.find("email").text,
+            "Phone": contact.find("phone").text,
+            "Address": contact.find("address").text,
+            "Affiliation": contact.find("affiliation").text,
+            "Role": contact.find("role").text,
+        }
         if not is_invalid_contact(contact_object):
             # contacts.append(add_contact_value(contact))
             contacts.append(contact_object)
@@ -130,6 +132,13 @@ def read_tag_node(root, tag):
 
 
 def is_invalid_contact(contact):
-    return contact["LastName"] is None and contact["FirstName"] is None and contact["MidInitials"] is None and contact[
-        "Email"] is None and contact["Phone"] is None and contact["Address"] is None and contact[
-               "Affiliation"] is None and contact["Role"] is None
+    return (
+        contact["LastName"] is None
+        and contact["FirstName"] is None
+        and contact["MidInitials"] is None
+        and contact["Email"] is None
+        and contact["Phone"] is None
+        and contact["Address"] is None
+        and contact["Affiliation"] is None
+        and contact["Role"] is None
+    )

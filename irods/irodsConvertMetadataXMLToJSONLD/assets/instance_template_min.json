@@ -96,10 +96,10 @@
       "contactEmail": {
         "@value": "PLACEHOLDER@email.nl"
       },
-      "contributorIdentifier": {
+      "contactNameIdentifier": {
         "@value": null
       },
-      "contributorIdentifierScheme": {},
+      "contactNameIdentifierScheme": {},
       "contactAffiliation": {},
       "contactPersonPhone": {
         "@value": null
@@ -109,16 +109,16 @@
       },
       "@id": "https://repo.metadatacenter.org/template-elements/00011dcd-573f-40dc-8453-b1e4a238a481",
       "@context": {
-        "contactType": "https://schema.metadatacenter.org/properties/4d0bd488-6d4a-4388-bfa9-3cbb1d941afb",
+        "contactNameIdentifierScheme": "https://schema.metadatacenter.org/properties/98a4370e-4712-482e-9ba8-95eb508250d4",
         "contactFullName": "https://schema.metadatacenter.org/properties/9cc96e17-345e-43c1-955d-9777ef8136aa",
-        "contactGivenName": "https://schema.metadatacenter.org/properties/1b2e719d-c7cc-4db0-b6f8-22ccdf43a387",
-        "contactFamilyName": "https://schema.metadatacenter.org/properties/510d9317-3658-429b-b773-8f9c0d288668",
-        "contactEmail": "https://schema.metadatacenter.org/properties/72eb0553-76b7-4ef2-898f-694aa015cdd4",
-        "contributorIdentifier": "https://schema.metadatacenter.org/properties/4636604a-6a42-4257-8a34-b8c68627cf32",
-        "contributorIdentifierScheme": "https://schema.metadatacenter.org/properties/264bff35-9c7e-4a84-a722-712217dfa232",
+        "contactNameIdentifier": "https://schema.metadatacenter.org/properties/2d775625-b775-47c9-86a9-25b6ec514a94",
         "contactAffiliation": "https://schema.metadatacenter.org/properties/488e6114-b24f-4bf6-83b0-45a33abdabf6",
+        "contactPersonRole": "https://schema.metadatacenter.org/properties/2db8b77d-450f-4435-a5ff-cd8f849d6725",
+        "contactEmail": "https://schema.metadatacenter.org/properties/72eb0553-76b7-4ef2-898f-694aa015cdd4",
         "contactPersonPhone": "https://schema.metadatacenter.org/properties/d99194e1-183f-4dc8-9af9-3efbd81b9dac",
-        "contactPersonRole": "https://schema.metadatacenter.org/properties/2db8b77d-450f-4435-a5ff-cd8f849d6725"
+        "contactFamilyName": "https://schema.metadatacenter.org/properties/510d9317-3658-429b-b773-8f9c0d288668",
+        "contactGivenName": "https://schema.metadatacenter.org/properties/1b2e719d-c7cc-4db0-b6f8-22ccdf43a387",
+        "contactType": "https://schema.metadatacenter.org/properties/4d0bd488-6d4a-4388-bfa9-3cbb1d941afb"
       }
     }
   ],
@@ -179,14 +179,14 @@
     "resourceTypeDetail": {
       "@value": null
     },
-    "resourceTypeCategory1": {
+    "resourceTypeGeneral": {
       "@id": "http://vocab.fairdatacollective.org/gdmt/Collection",
       "rdfs:label": "Collection"
     },
     "@id": "https://repo.metadatacenter.org/template-elements/34e8196b-c93f-4a04-a691-42d50da0aebf",
     "@context": {
       "resourceTypeDetail": "https://schema.metadatacenter.org/properties/26faf602-2fd3-4e22-818b-32949c82b746",
-      "resourceTypeCategory1": "https://schema.metadatacenter.org/properties/4626a236-9d82-43ad-83b3-403b38d51b6c"
+      "resourceTypeGeneral": "https://schema.metadatacenter.org/properties/42039c05-9fe3-4e8a-b9f6-f97affc62d3c"
     }
   },
   "12_RelatedIdentifier": [
@@ -257,13 +257,13 @@
     "2_Creator": "https://schema.metadatacenter.org/properties/6297f721-5a92-4014-9a7d-2eeb9afbe11b",
     "12_RelatedIdentifier": "https://schema.metadatacenter.org/properties/65f55a39-f020-45d6-a071-c8388a12a25f",
     "7_Contributor": "https://schema.metadatacenter.org/properties/45bffde9-fe61-4479-a70d-953e3aa4a9c9",
-    "10_ResourceType": "https://schema.metadatacenter.org/properties/74ad8a7e-372c-42dc-9d92-22fe5f7d9f9b",
+    "10_ResourceType": "https://schema.metadatacenter.org/properties/fa3f1cf0-1e04-42fd-9cac-a1ee696aa6af",
     "17_Description": "http://purl.org/spar/datacite/hasDescription",
     "3_Title": "http://purl.org/dc/terms/title",
     "6_Subject": "https://schema.metadatacenter.org/properties/2d58f79e-f6f6-4b25-8ed0-c876b161fdcf",
     "1_Identifier": "https://schema.metadatacenter.org/properties/b260286d-3da0-4f53-a40d-eb769c24da8f",
     "Extended_Date": "https://schema.metadatacenter.org/properties/f3bdcffb-aeb3-4c6a-b6fb-3ffeff92c788",
-    "7_ContactPerson": "https://schema.metadatacenter.org/properties/e2d8ecdd-0dc8-46c7-8d84-b2e83bce14b5",
-    "Extended_Experiment": "https://schema.metadatacenter.org/properties/e98dacd2-1c7b-4570-92c9-4f7b4916216e"
+    "7_ContactPerson": "https://schema.metadatacenter.org/properties/a0a323bf-8eb1-4270-8ff4-dabea2946980",
+    "Extended_Experiment": "https://schema.metadatacenter.org/properties/89df98fe-1486-4c02-81eb-3e11f755525b"
   }
 }
