@@ -77,11 +77,11 @@ class UpdateExistingCollections:
             self.WARNING_COUNT += 1
 
         try:
-            display_name = self.users[creator].display_name
+            display_name = self.users[creator.lower()].display_name
             split = display_name.split(" ")
             first_name = split[0]
             last_name = " ".join(split[1:])
-            creator_username = self.users[creator].user_name
+            creator_username = self.users[creator.lower()].user_name
         except KeyError:
             first_name = ""
             last_name = ""
@@ -296,7 +296,7 @@ class UpdateExistingCollections:
         result = self.rule_manager.get_users("false")
         for user in result.users:
             email = self.rule_manager.get_username_attribute_value(user.user_name, "email", "false")
-            ret[email.value] = user
+            ret[email.value.lower()] = user
 
         return ret
 
