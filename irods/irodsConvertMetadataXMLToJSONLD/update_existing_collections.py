@@ -29,6 +29,7 @@ class UpdateExistingCollections:
         self.session = rule_manager.session
         self.schema_version = json_schema["pav:version"]
         self.original_pid_requested = False
+        self.creator_mapping = self.read_creator_mapping_file()
 
         self.force_flag = args.force_flag
         self.commit = args.commit
@@ -45,6 +46,32 @@ class UpdateExistingCollections:
             self.ERROR_COUNT += 1
 
         return metadata_xml
+
+    @staticmethod
+    def read_creator_mapping_file():
+        with open("assets/creators_info_mapping.json", encoding="utf-8") as mapping_file:
+            return json.load(mapping_file)
+
+    def get_creator_display_name(self, creator_email):
+        if creator_email in self.users:
+            return self.users[creator_email].display_name
+        elif creator_email in self.creator_mapping:
+            return self.creator_mapping[creator_email]["creatorFullName"]
+        else:
+            print(f"\t\t Error: creator display name not found for {creator_email}")
+            self.ERROR_COUNT += 1
+            raise KeyError
+
+    def get_creator_user_name(self, creator_email):
+        if creator_email in self.users:
+            return self.users[creator_email].user_name
+        elif creator_email in self.creator_mapping:
+            print(f"\t\t Info: creatorUsername")
+            return self.creator_mapping[creator_email]["creatorUsername"]
+        else:
+            print(f"\t\t Error: creator username not found for {creator_email}")
+            self.ERROR_COUNT += 1
+            raise KeyError
 
     def get_avu_metadata(self, collection_object, project_id):
         query = self.rule_manager.session.query(iRODSCollection).filter(iRODSCollection.id == collection_object.id)
@@ -77,17 +104,15 @@ class UpdateExistingCollections:
             self.WARNING_COUNT += 1
 
         try:
-            display_name = self.users[creator.lower()].display_name
+            display_name = self.get_creator_display_name(creator.lower())
             split = display_name.split(" ")
             first_name = split[0]
             last_name = " ".join(split[1:])
-            creator_username = self.users[creator.lower()].user_name
+            creator_username = self.get_creator_user_name(creator.lower())
         except KeyError:
             first_name = ""
             last_name = ""
             creator_username = ""
-            print(f"\t\t Warning: user info missing for {creator}")
-            self.WARNING_COUNT += 1
 
         ret = {
             "affiliation_mapping_file": "assets/affiliation_mapping.json",
@@ -243,6 +268,10 @@ class UpdateExistingCollections:
             return
 
         avu = self.get_avu_metadata(collection_object, project_id)
+        if avu["creator_username"] == "" or avu["creatorGivenName"] == "" or avu["creatorFamilyName"] == "":
+            print(f"\t\t Error: Skip conversion; Creator info missing")
+            return
+
         conversion = Conversion(metadata_xml, self.json_instance_template, avu)
         json_instance = conversion.get_instance()
         self.WARNING_COUNT += conversion.WARNING_COUNT
