@@ -348,9 +348,7 @@ def main():
 
     parser = argparse.ArgumentParser(description="update_existing_collections description")
     parser.add_argument("-f", "--force-flag", action="store_true", help="Overwrite existing metadata files")
-    parser.add_argument(
-        "-w", "--wipe", action="store_true", help="Wipes .metadata_versions before conversion"
-    )
+    parser.add_argument("-w", "--wipe", action="store_true", help="Wipes .metadata_versions before conversion")
     parser.add_argument("-c", "--commit", action="store_true", help="Commit to upload the converted file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print the converted instance.json")
     parser.add_argument(

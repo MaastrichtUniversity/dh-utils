@@ -4,9 +4,9 @@
   "schema:name": "DataHub Extended Template",
   "schema:description": "This is the basic DataHub extended Template",
   "pav:createdOn": "2022-01-21T11:50:23",
-  "pav:createdBy": "https://mdr.datahubmaastricht.nl/user/jmelius",
+  "pav:createdBy": "https://mdr.datahubmaastricht.nl/user/placeholder",
   "pav:lastUpdatedOn": "2022-01-21T11:50:23",
-  "oslc:modifiedBy": "https://mdr.datahubmaastricht.nl/user/jmelius",
+  "oslc:modifiedBy": "https://mdr.datahubmaastricht.nl/user/placeholder",
   "1_Identifier": {
     "datasetIdentifier": {
       "@value": "PLACEHOLDER"
@@ -205,14 +205,20 @@
     }
   ],
   "Extended_Experiment": {
-    "organism": {},
-    "tissue": {},
-    "technique": {},
     "@id": "https://repo.metadatacenter.org/template-elements/36ead141-43a2-40ae-bc4b-589d145a1bf7",
+    "technique": [
+      {}
+    ],
+    "tissue": [
+      {}
+    ],
+    "organism": [
+      {}
+    ],
     "@context": {
-      "organism": "https://schema.metadatacenter.org/properties/aa83e8db-f85c-45af-a25c-5ce699c71494",
+      "technique": "https://schema.metadatacenter.org/properties/47a9b0c1-7251-43a8-8d24-0c8ab35620ae",
       "tissue": "https://schema.metadatacenter.org/properties/b034258f-87d8-440f-a827-05cf7a09be7b",
-      "technique": "https://schema.metadatacenter.org/properties/47a9b0c1-7251-43a8-8d24-0c8ab35620ae"
+      "organism": "https://schema.metadatacenter.org/properties/aa83e8db-f85c-45af-a25c-5ce699c71494"
     }
   },
   "@context": {
@@ -252,18 +258,18 @@
     "skos:notation": {
       "@type": "xsd:string"
     },
-    "4_Publisher": "https://schema.metadatacenter.org/properties/68a521c1-69af-49e5-95a0-9890642da26d",
-    "8_Date": "https://schema.metadatacenter.org/properties/29cd27ea-b7b6-47b7-a82d-ab48ae34396d",
-    "2_Creator": "https://schema.metadatacenter.org/properties/6297f721-5a92-4014-9a7d-2eeb9afbe11b",
-    "12_RelatedIdentifier": "https://schema.metadatacenter.org/properties/65f55a39-f020-45d6-a071-c8388a12a25f",
-    "7_Contributor": "https://schema.metadatacenter.org/properties/45bffde9-fe61-4479-a70d-953e3aa4a9c9",
-    "10_ResourceType": "https://schema.metadatacenter.org/properties/fa3f1cf0-1e04-42fd-9cac-a1ee696aa6af",
-    "17_Description": "http://purl.org/spar/datacite/hasDescription",
-    "3_Title": "http://purl.org/dc/terms/title",
-    "6_Subject": "https://schema.metadatacenter.org/properties/2d58f79e-f6f6-4b25-8ed0-c876b161fdcf",
     "1_Identifier": "https://schema.metadatacenter.org/properties/b260286d-3da0-4f53-a40d-eb769c24da8f",
-    "Extended_Date": "https://schema.metadatacenter.org/properties/f3bdcffb-aeb3-4c6a-b6fb-3ffeff92c788",
-    "7_ContactPerson": "https://schema.metadatacenter.org/properties/a0a323bf-8eb1-4270-8ff4-dabea2946980",
-    "Extended_Experiment": "https://schema.metadatacenter.org/properties/89df98fe-1486-4c02-81eb-3e11f755525b"
+    "2_Creator": "https://schema.metadatacenter.org/properties/6297f721-5a92-4014-9a7d-2eeb9afbe11b",
+    "3_Title": "http://purl.org/dc/terms/title",
+    "4_Publisher": "https://schema.metadatacenter.org/properties/68a521c1-69af-49e5-95a0-9890642da26d",
+    "6_Subject": "https://schema.metadatacenter.org/properties/d8dc1860-b3a5-4547-ad22-0e003dc2e5fc",
+    "7_ContactPerson": "https://schema.metadatacenter.org/properties/bc76dd92-b673-480a-8150-e8ae6d33ee25",
+    "7_Contributor": "https://schema.metadatacenter.org/properties/45bffde9-fe61-4479-a70d-953e3aa4a9c9",
+    "8_Date": "https://schema.metadatacenter.org/properties/29cd27ea-b7b6-47b7-a82d-ab48ae34396d",
+    "10_ResourceType": "https://schema.metadatacenter.org/properties/8f154e9c-501a-4b80-b148-a74f250edc69",
+    "12_RelatedIdentifier": "https://schema.metadatacenter.org/properties/65f55a39-f020-45d6-a071-c8388a12a25f",
+    "17_Description": "https://schema.metadatacenter.org/properties/28d418d7-bfe7-44fb-968f-6e3ae9b68501",
+    "Extended_Date": "https://schema.metadatacenter.org/properties/fa0a5937-7abc-45fc-8762-c7834bab61f9",
+    "Extended_Experiment": "https://schema.metadatacenter.org/properties/6fa4770f-23c2-42d6-9e7a-6b7553056c8c"
   }
 }

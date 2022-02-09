@@ -30,12 +30,12 @@ def add_publications_values(articles):
     return ret
 
 
-def add_ontology_value(value):
+def add_array_ontology_value(value):
     ret = {}
     if value["id"] != "" and "http" in value["id"]:
         ontology_id = "http" + value["id"].split("http")[1]
         ret = {"@id": ontology_id, "rdfs:label": value["label"]}
-    return ret
+    return [ret]
 
 
 def format_common_value(value: str) -> dict:

@@ -117,13 +117,13 @@ class Conversion:
     def add_extended_experiment(self):
         # "Extended_Experiment":
         organism = read_tag(self.xml_root, "organism")
-        add_value_to_key(self.json_instance_template, "organism", add_ontology_value(organism))
+        add_value_to_key(self.json_instance_template, "organism", add_array_ontology_value(organism))
 
         tissue = read_tag(self.xml_root, "tissue")
-        add_value_to_key(self.json_instance_template, "tissue", add_ontology_value(tissue))
+        add_value_to_key(self.json_instance_template, "tissue", add_array_ontology_value(tissue))
 
         technology = read_tag(self.xml_root, "technology")
-        add_value_to_key(self.json_instance_template, "technique", add_ontology_value(technology))
+        add_value_to_key(self.json_instance_template, "technique", add_array_ontology_value(technology))
 
 
 USAGE = f"Usage: python {sys.argv[0]} [configuration file path] [instance.json output file path]"
