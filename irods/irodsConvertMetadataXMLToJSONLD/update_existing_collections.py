@@ -32,6 +32,7 @@ class UpdateExistingCollections:
         self.creator_mapping = self.read_creator_mapping_file()
 
         self.force_flag = args.force_flag
+        self.wipe = args.wipe
         self.commit = args.commit
         self.project_collection_path = args.project_collection_path
         self.verbose = args.verbose
@@ -215,6 +216,12 @@ class UpdateExistingCollections:
         os.remove(schema_tmp)
         return status
 
+    def wipe_collection(self, project_id, collection_id):
+        metadata_versions = f"/nlmumc/projects/{project_id}/{collection_id}/.metadata_versions"
+        if self.rule_manager.session.collections.exists(metadata_versions):
+            self.rule_manager.session.collections.remove(metadata_versions)
+            print(f"\t\t Wiping directory {metadata_versions}")
+
     def upload_file(self, source_file, destination_path):
         if not self.force_flag and self.rule_manager.session.data_objects.exists(destination_path):
             print(f"\t\t Error: {destination_path} already exists")
@@ -250,13 +257,14 @@ class UpdateExistingCollections:
         instance_path = f"{collection_object.path}/instance.json"
         schema_path = f"{collection_object.path}/schema.json"
 
-        if not self.force_flag and self.rule_manager.session.data_objects.exists(instance_path):
-            print(f"\t\t Error: File {instance_path} already exist")
+        instance_exists = self.rule_manager.session.data_objects.exists(instance_path)
+        if not self.force_flag and instance_exists:
+            print(f"\t\t Error: File {instance_path} already exists")
             print(f"\t\t Error: Skip conversion for {collection_object.path}")
             self.ERROR_COUNT += 1
             return
         if not self.force_flag and self.rule_manager.session.data_objects.exists(schema_path):
-            print(f"\t\t Error: File {schema_path} already exist")
+            print(f"\t\t Error: File {schema_path} already exists")
             print(f"\t\t Error: Skip conversion for {collection_object.path}")
             self.ERROR_COUNT += 1
             return
@@ -280,6 +288,9 @@ class UpdateExistingCollections:
         if self.commit:
             if not self.original_pid_requested:
                 self.rule_manager.open_project_collection(project_id, collection_id, session.username, "own")
+            if self.wipe and instance_exists:
+                self.wipe_collection(project_id, collection_id)
+
             self.register_pids(project_id, collection_id)
             self.update_collection_avu(project_id, collection_id)
             status = self.replace_collection_metadata(project_id, collection_id, avu["base_PID"], json_instance)
@@ -287,7 +298,7 @@ class UpdateExistingCollections:
             if status == 0:
                 print("\t\t Upload done")
             else:
-                print("\t\t Upload uncompleted")
+                print("\t\t Upload failed")
 
         if self.verbose:
             print(json.dumps(json_instance, ensure_ascii=False, indent=4))
@@ -337,12 +348,25 @@ def main():
 
     parser = argparse.ArgumentParser(description="update_existing_collections description")
     parser.add_argument("-f", "--force-flag", action="store_true", help="Overwrite existing metadata files")
+    parser.add_argument(
+        "-w", "--wipe", action="store_true", help="Wipes .metadata_versions before conversion"
+    )
     parser.add_argument("-c", "--commit", action="store_true", help="Commit to upload the converted file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print the converted instance.json")
     parser.add_argument(
         "-p", "--project-collection-path", type=str, help="The absolute path of the project collection to convert"
     )
     args = parser.parse_args()
+
+    if args.wipe and args.commit:
+        if not args.force_flag:
+            exit("ERROR: 'Wipe' has to be used in conjunction with --force-flag")
+
+        wipe_confirm = input(
+            "Are you sure you want to run the script in 'wipe' mode? This will remove the existing .metadata_versions from the collection(s)! Type 'yes' to continue "
+        )
+        if wipe_confirm.lower() != "yes":
+            exit("Exiting, scaredy cat")
 
     if args.project_collection_path and not check_project_collection_path_format(args.project_collection_path):
         exit(f"Wrong project collection path {args.project_collection_path}")
