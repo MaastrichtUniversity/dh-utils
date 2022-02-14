@@ -138,7 +138,7 @@
       "@value": "PLACEHOLDER"
     },
     "descriptionType": {
-      "@value": "http://purl.org/spar/datacite/abstract"
+      "@value": "Abstract"
     },
     "@id": "https://repo.metadatacenter.org/template-elements/1595a50e-f0c0-47c6-804e-fff5ac7a7531",
     "@context": {
@@ -177,7 +177,7 @@
   ],
   "10_ResourceType": {
     "resourceTypeDetail": {
-      "@value": null
+      "@value": "Collection"
     },
     "resourceTypeGeneral": {
       "@id": "http://vocab.fairdatacollective.org/gdmt/Collection",
