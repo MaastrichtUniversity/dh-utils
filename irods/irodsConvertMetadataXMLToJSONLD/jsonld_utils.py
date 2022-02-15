@@ -30,12 +30,12 @@ def add_publications_values(articles):
     return ret
 
 
-def add_ontology_value(value):
+def add_array_ontology_value(value):
     ret = {}
     if value["id"] != "" and "http" in value["id"]:
         ontology_id = "http" + value["id"].split("http")[1]
         ret = {"@id": ontology_id, "rdfs:label": value["label"]}
-    return ret
+    return [ret]
 
 
 def format_common_value(value: str) -> dict:
@@ -61,10 +61,10 @@ def add_creator(avu_metadata):
         "creatorGivenName": format_common_value(avu_metadata["creatorGivenName"]),
         "creatorFamilyName": format_common_value(avu_metadata["creatorFamilyName"]),
         "creatorFullName": format_common_value(full_name),
-        "creatorIdentifier": format_common_value(None),
+        "creatorIdentifier": format_common_value("0000-0000-0000-0000"),
         "creatorAffiliation": {},
-        "creatorIdentifierScheme": {},
-        "creatorIdentifierSchemeIRI": {},
+        "creatorIdentifierScheme": {"@id": "https://orcid.org/", "rdfs:label": "ORCiD"},
+        "creatorIdentifierSchemeIRI": {"@id": "https://orcid.org/", "rdfs:label": "ORCiD"},
     }
     return ret
 
@@ -178,7 +178,7 @@ def add_contributors(contributors):
     for contributor in contributors.values():
         ret.append(
             {
-                "contributorIdentifierScheme": {},
+                "contributorIdentifierScheme": {"@id": "https://orcid.org/", "rdfs:label": "ORCiD"},
                 "contributorIdentifier": {"@value": None},
                 "contributorAffiliation": {},
                 "contributorFullName": {"@value": contributor["contributorFullName"]},

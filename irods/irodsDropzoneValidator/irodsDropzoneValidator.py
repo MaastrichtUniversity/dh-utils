@@ -16,17 +16,19 @@ from irods.session import iRODSSession
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description=__doc__,
-        formatter_class=lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=40, width=100)
+        formatter_class=lambda prog: argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=40, width=100),
     )
 
-    parser.add_argument("-s", "--source", metavar='DIR', required=True, help="Source directory to check")
-    parser.add_argument("-t", "--target", metavar='COLLECTION', required=True,
-                        help="Target iRODS collection to validate against")
-    parser.add_argument("-q", "--quiet", action='store_true', help="Hide progress and only show errors")
-    parser.add_argument("-v", "--verbose", action='store_true', help="Be extra verbose")
-    parser.add_argument("-c", "--continue", action='store_true', help="Continue on validation error")
-    parser.add_argument("-p", "--parallel", metavar='n', type=int, help="Number of parallel processes running checksum",
-                        default=1)
+    parser.add_argument("-s", "--source", metavar="DIR", required=True, help="Source directory to check")
+    parser.add_argument(
+        "-t", "--target", metavar="COLLECTION", required=True, help="Target iRODS collection to validate against"
+    )
+    parser.add_argument("-q", "--quiet", action="store_true", help="Hide progress and only show errors")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Be extra verbose")
+    parser.add_argument("-c", "--continue", action="store_true", help="Continue on validation error")
+    parser.add_argument(
+        "-p", "--parallel", metavar="n", type=int, help="Number of parallel processes running checksum", default=1
+    )
 
     settings = parser.parse_args()
 
@@ -34,7 +36,7 @@ def parse_arguments():
 
 
 def setup_custom_logger(name, log_level):
-    formatter = logging.Formatter(fmt='%(asctime)s - %(levelname)7s - %(module)s - %(message)s')
+    formatter = logging.Formatter(fmt="%(asctime)s - %(levelname)7s - %(module)s - %(message)s")
 
     handler = logging.StreamHandler()
     handler.setFormatter(formatter)
@@ -71,9 +73,9 @@ def checksum_calculator(config, p):
 def irods_session(config):
     # iRODS config
     try:
-        env_file = os.environ['IRODS_ENVIRONMENT_FILE']
+        env_file = os.environ["IRODS_ENVIRONMENT_FILE"]
     except KeyError:
-        env_file = os.path.expanduser('~/.irods/irods_environment.json')
+        env_file = os.path.expanduser("~/.irods/irods_environment.json")
 
     try:
         # Build iRODS connection
@@ -96,7 +98,7 @@ def irods_session(config):
 
 
 def irods_hash_to_sha256(h):
-    irods_hash = h.split('sha2:')[1]
+    irods_hash = h.split("sha2:")[1]
     base_hash = base64.b64decode(irods_hash)
     return binascii.hexlify(base_hash).decode("utf-8")
 
@@ -162,7 +164,7 @@ def main():
             except (CollectionDoesNotExist, DataObjectDoesNotExist):
                 logger.error("File `%s` does not exist in target collection" % p)
 
-                if not getattr(config, 'continue'):
+                if not getattr(config, "continue"):
                     return 1
                 else:
                     continue
@@ -171,7 +173,7 @@ def main():
             if o.checksum is None:
                 logger.error("File `%s` does not have a checksum stored in iRODS" % p)
 
-                if not getattr(config, 'continue'):
+                if not getattr(config, "continue"):
                     return 1
                 else:
                     continue
@@ -183,7 +185,7 @@ def main():
             if irods_hash_decode != checksum:
                 logger.error("File `%s` does not match checksum" % p)
 
-                if not getattr(config, 'continue'):
+                if not getattr(config, "continue"):
                     return 1
                 else:
                     continue

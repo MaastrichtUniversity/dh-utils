@@ -29,8 +29,10 @@ class UpdateExistingCollections:
         self.session = rule_manager.session
         self.schema_version = json_schema["pav:version"]
         self.original_pid_requested = False
+        self.creator_mapping = self.read_creator_mapping_file()
 
         self.force_flag = args.force_flag
+        self.wipe = args.wipe
         self.commit = args.commit
         self.project_collection_path = args.project_collection_path
         self.verbose = args.verbose
@@ -45,6 +47,32 @@ class UpdateExistingCollections:
             self.ERROR_COUNT += 1
 
         return metadata_xml
+
+    @staticmethod
+    def read_creator_mapping_file():
+        with open("assets/creators_info_mapping.json", encoding="utf-8") as mapping_file:
+            return json.load(mapping_file)
+
+    def get_creator_display_name(self, creator_email):
+        if creator_email in self.users:
+            return self.users[creator_email].display_name
+        elif creator_email in self.creator_mapping:
+            return self.creator_mapping[creator_email]["creatorFullName"]
+        else:
+            print(f"\t\t Error: creator display name not found for {creator_email}")
+            self.ERROR_COUNT += 1
+            raise KeyError
+
+    def get_creator_user_name(self, creator_email):
+        if creator_email in self.users:
+            return self.users[creator_email].user_name
+        elif creator_email in self.creator_mapping:
+            print(f"\t\t Info: creatorUsername")
+            return self.creator_mapping[creator_email]["creatorUsername"]
+        else:
+            print(f"\t\t Error: creator username not found for {creator_email}")
+            self.ERROR_COUNT += 1
+            raise KeyError
 
     def get_avu_metadata(self, collection_object, project_id):
         query = self.rule_manager.session.query(iRODSCollection).filter(iRODSCollection.id == collection_object.id)
@@ -77,17 +105,15 @@ class UpdateExistingCollections:
             self.WARNING_COUNT += 1
 
         try:
-            display_name = self.users[creator].display_name
+            display_name = self.get_creator_display_name(creator.lower())
             split = display_name.split(" ")
             first_name = split[0]
             last_name = " ".join(split[1:])
-            creator_username = self.users[creator].user_name
+            creator_username = self.get_creator_user_name(creator.lower())
         except KeyError:
             first_name = ""
             last_name = ""
             creator_username = ""
-            print(f"\t\t Warning: user info missing for {creator}")
-            self.WARNING_COUNT += 1
 
         ret = {
             "affiliation_mapping_file": "assets/affiliation_mapping.json",
@@ -190,6 +216,12 @@ class UpdateExistingCollections:
         os.remove(schema_tmp)
         return status
 
+    def wipe_collection(self, project_id, collection_id):
+        metadata_versions = f"/nlmumc/projects/{project_id}/{collection_id}/.metadata_versions"
+        if self.rule_manager.session.collections.exists(metadata_versions):
+            self.rule_manager.session.collections.remove(metadata_versions)
+            print(f"\t\t Wiping directory {metadata_versions}")
+
     def upload_file(self, source_file, destination_path):
         if not self.force_flag and self.rule_manager.session.data_objects.exists(destination_path):
             print(f"\t\t Error: {destination_path} already exists")
@@ -225,13 +257,14 @@ class UpdateExistingCollections:
         instance_path = f"{collection_object.path}/instance.json"
         schema_path = f"{collection_object.path}/schema.json"
 
-        if not self.force_flag and self.rule_manager.session.data_objects.exists(instance_path):
-            print(f"\t\t Error: File {instance_path} already exist")
+        instance_exists = self.rule_manager.session.data_objects.exists(instance_path)
+        if not self.force_flag and instance_exists:
+            print(f"\t\t Error: File {instance_path} already exists")
             print(f"\t\t Error: Skip conversion for {collection_object.path}")
             self.ERROR_COUNT += 1
             return
         if not self.force_flag and self.rule_manager.session.data_objects.exists(schema_path):
-            print(f"\t\t Error: File {schema_path} already exist")
+            print(f"\t\t Error: File {schema_path} already exists")
             print(f"\t\t Error: Skip conversion for {collection_object.path}")
             self.ERROR_COUNT += 1
             return
@@ -243,6 +276,10 @@ class UpdateExistingCollections:
             return
 
         avu = self.get_avu_metadata(collection_object, project_id)
+        if avu["creator_username"] == "" or avu["creatorGivenName"] == "" or avu["creatorFamilyName"] == "":
+            print(f"\t\t Error: Skip conversion; Creator info missing")
+            return
+
         conversion = Conversion(metadata_xml, self.json_instance_template, avu)
         json_instance = conversion.get_instance()
         self.WARNING_COUNT += conversion.WARNING_COUNT
@@ -251,6 +288,9 @@ class UpdateExistingCollections:
         if self.commit:
             if not self.original_pid_requested:
                 self.rule_manager.open_project_collection(project_id, collection_id, session.username, "own")
+            if self.wipe and instance_exists:
+                self.wipe_collection(project_id, collection_id)
+
             self.register_pids(project_id, collection_id)
             self.update_collection_avu(project_id, collection_id)
             status = self.replace_collection_metadata(project_id, collection_id, avu["base_PID"], json_instance)
@@ -258,7 +298,7 @@ class UpdateExistingCollections:
             if status == 0:
                 print("\t\t Upload done")
             else:
-                print("\t\t Upload uncompleted")
+                print("\t\t Upload failed")
 
         if self.verbose:
             print(json.dumps(json_instance, ensure_ascii=False, indent=4))
@@ -296,7 +336,7 @@ class UpdateExistingCollections:
         result = self.rule_manager.get_users("false")
         for user in result.users:
             email = self.rule_manager.get_username_attribute_value(user.user_name, "email", "false")
-            ret[email.value] = user
+            ret[email.value.lower()] = user
 
         return ret
 
@@ -308,12 +348,23 @@ def main():
 
     parser = argparse.ArgumentParser(description="update_existing_collections description")
     parser.add_argument("-f", "--force-flag", action="store_true", help="Overwrite existing metadata files")
+    parser.add_argument("-w", "--wipe", action="store_true", help="Wipes .metadata_versions before conversion")
     parser.add_argument("-c", "--commit", action="store_true", help="Commit to upload the converted file")
     parser.add_argument("-v", "--verbose", action="store_true", help="Print the converted instance.json")
     parser.add_argument(
         "-p", "--project-collection-path", type=str, help="The absolute path of the project collection to convert"
     )
     args = parser.parse_args()
+
+    if args.wipe and args.commit:
+        if not args.force_flag:
+            exit("ERROR: 'Wipe' has to be used in conjunction with --force-flag")
+
+        wipe_confirm = input(
+            "Are you sure you want to run the script in 'wipe' mode? This will remove the existing .metadata_versions from the collection(s)! Type 'yes' to continue "
+        )
+        if wipe_confirm.lower() != "yes":
+            exit("Exiting, scaredy cat")
 
     if args.project_collection_path and not check_project_collection_path_format(args.project_collection_path):
         exit(f"Wrong project collection path {args.project_collection_path}")
