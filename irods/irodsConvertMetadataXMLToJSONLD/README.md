@@ -20,6 +20,13 @@ pip install -e git+https://github.com/MaastrichtUniversity/irods-rule-wrapper.gi
 # deactivate
 ```
 
+# Before usage
+1. Edit the `update_existing_collections.py` file and change the token inside the `schema_url` variable. Example 
+    ```
+    schema_url = "https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/release/customizable_metadata/core/static/assets/schemas/DataHub_extended_schema.json?token=YOUR_TOKEN_HERE"
+    ```
+1. Make necessary changes to the `assets/creators_info_mapping.json` file. This file is for users for which the creator info cannot be retrieved from iCAT.
+
 # Usage
 ```
 source ./venv3/bin/activate
@@ -29,7 +36,7 @@ python3 metadata_xml_to_json.py [path to the config file] [output instance json 
 python3 metadata_xml_to_json.py config.json instance.json
 
 # To update existing metadata.xml inside project collections
-python3 update_existing_collections.py [-h] [-f] [-c] [-v]
+python3 update_existing_collections.py [-h] [-f] [-c] [-w] [-v]
                                       [-p PROJECT_COLLECTION_PATH]
 
 update_existing_collections description
@@ -38,6 +45,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -f, --force-flag      Overwrite existing metadata files
   -c, --commit          Commit to upload the converted file
+  -w, --wipe            Wipes .metadata_versions before conversion. Asks for confirmation before doing it.
   -v, --verbose         Print the converted instance.json
   -p PROJECT_COLLECTION_PATH, --project-collection-path PROJECT_COLLECTION_PATH
                         The absolute path of the project collection to convert
