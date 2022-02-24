@@ -151,10 +151,51 @@ class SchemaValidator:
             The ID of the node for reference
 
         """
+        self.validate_field_properties(node, node_id)
         if schema_name == CedarSchemaName.PAGE_BREAK:
             self.validate_page_break(node_id)
         elif schema_name == CedarSchemaName.TEXTAREA:
             self.validate_textarea(node, node_id)
+
+    def validate_field_properties(self, node: dict, node_id: str):
+        """
+        Validate the properties of a single field
+
+        Parameters
+        ----------
+        node: dict
+            The node to validate
+        node_id: str
+            The ID of the node for reference
+
+
+        """
+        if "skos:altLabel" in node:
+            self.WARNING_COUNT += 1
+            log_message("WARNING", node_id, "Alternative labels are not supported in MDR")
+        if "_valueConstraints" in node:
+            value_constraints = node["_valueConstraints"]
+            if "numberType" in value_constraints:
+                self.WARNING_COUNT += 1
+                log_message("WARNING", node_id, "The valueConstraint 'numberType' is not supported in MDR")
+            if "minValue" in value_constraints:
+                self.WARNING_COUNT += 1
+                log_message("WARNING", node_id, "The valueConstraint 'minValue' is not supported in MDR")
+            if "maxValue" in value_constraints:
+                self.WARNING_COUNT += 1
+                log_message("WARNING", node_id, "The valueConstraint 'maxValue' is not supported in MDR")
+            if "decimalPlace" in value_constraints:
+                self.WARNING_COUNT += 1
+                log_message("WARNING", node_id, "The valueConstraint 'decimalPlace' is not supported in MDR")
+            if "unitOfMeasure" in value_constraints:
+                self.WARNING_COUNT += 1
+                log_message("WARNING", node_id, "The valueConstraint 'unitOfMeasure' is not supported in MDR")
+            if "maxLength" in value_constraints:
+                self.WARNING_COUNT += 1
+                log_message("WARNING", node_id, "The valueConstraint 'maxLength' is not supported in MDR")
+            if "minLength" in value_constraints:
+                self.WARNING_COUNT += 1
+                log_message("WARNING", node_id, "The valueConstraint 'minLength' is not supported in MDR")
 
     def validate_page_break(self, node_id: str):
         """
