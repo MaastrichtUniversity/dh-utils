@@ -143,17 +143,17 @@ class SchemaValidator:
     # region General schema validation
 
     def validate_general_fields(self, schema):
-        for key, value in GENERAL_SCHEMA_FIELDS_TO_CHECK.items():
-            if key in schema["properties"]:
-                element = schema["properties"][key]
+        for node_id, node in GENERAL_SCHEMA_FIELDS_TO_CHECK.items():
+            if node_id in schema["properties"]:
+                element = schema["properties"][node_id]
                 try:
-                    self.check_element_is_valid(element, value)
+                    self.check_element_is_valid(element, node)
                 except KeyError as e:
                     self.utils.log_message(
-                        Severities.ERROR, key, f"Required element from DataHub General not identical {e}"
+                        Severities.ERROR, node_id, f"Required element from DataHub General not identical {e}"
                     )
             else:
-                self.utils.log_message(Severities.ERROR, key, "Required element from DataHub General not found")
+                self.utils.log_message(Severities.ERROR, node_id, "Required element from DataHub General not found")
 
     def check_element_is_valid(self, element, json_to_check):
         valid = True
@@ -167,6 +167,7 @@ class SchemaValidator:
                 self.check_field_type_valid(field, element_to_check, value)
                 and self.check_field_input_type_valid(field, element_to_check, value)
                 and self.check_field_hidden_valid(field, element_to_check, value)
+                and self.check_field_required_valid(field, element_to_check, value)
                 and self.check_field_default_value_valid(field, element_to_check, value)
                 and self.check_field_branches_valid(field, element_to_check, value)
             )
@@ -199,14 +200,35 @@ class SchemaValidator:
         return valid
 
     def check_field_hidden_valid(self, field_id, current_field, general):
-        valid = True
-        if "_ui" in general and "hidden" in general["_ui"]:
-            valid = current_field["_ui"]["hidden"] == general["_ui"]["hidden"]
+        general_hidden = "_ui" in general and "hidden" in general["_ui"] and general["_ui"]["hidden"]
+        current_hidden = "_ui" in current_field and "hidden" in current_field["_ui"] and current_field["_ui"]["hidden"]
+        valid = current_hidden == general_hidden
         if not valid:
             self.utils.log_message(
                 Severities.ERROR,
                 field_id,
-                f"Field 'hidden' not the same as general: {current_field['_ui']['hidden']} != {general['_ui']['hidden']}",
+                f"Field 'hidden' not the same. Current: '{current_hidden}' != General: '{general_hidden}'",
+            )
+
+        return valid
+
+    def check_field_required_valid(self, field_id, current_field, general):
+        general_required = (
+            "_valueConstraints" in general
+            and "requiredValue" in general["_valueConstraints"]
+            and general["_valueConstraints"]["requiredValue"]
+        )
+        current_required = (
+            "_valueConstraints" in current_field
+            and "requiredValue" in current_field["_valueConstraints"]
+            and current_field["_valueConstraints"]["requiredValue"]
+        )
+        valid = current_required == general_required
+        if not valid:
+            self.utils.log_message(
+                Severities.ERROR,
+                field_id,
+                f"Field 'required' not the same as general: Current: '{current_required}' != General: '{general_required}'",
             )
 
         return valid

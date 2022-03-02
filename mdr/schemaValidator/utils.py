@@ -34,8 +34,27 @@ GENERAL_SCHEMA_FIELDS_TO_CHECK = {
     "1_Identifier": {
         "type": "object",
         "fields": {
-            "datasetIdentifier": {"type": "object", "_ui": {"inputType": "textfield", "hidden": True}},
-            "datasetIdentifierType": {"type": "object", "_ui": {"inputType": "textfield", "hidden": True}},
+            "datasetIdentifier": {
+                "type": "object",
+                "_ui": {"inputType": "textfield", "hidden": True},
+                "_valueConstraints": {"requiredValue": False, "defaultValue": ""},
+            },
+            "datasetIdentifierType": {
+                "type": "object",
+                "_ui": {"inputType": "textfield", "hidden": True},
+                "_valueConstraints": {
+                    "requiredValue": True,
+                    "branches": [
+                        {
+                            "source": "Ontology for Generic Dataset Metadata Template (FDC-GDMT)",
+                            "acronym": "FDC-GDMT",
+                            "uri": "http://vocab.fairdatacollective.org/gdmt/IdentifierType",
+                            "name": "Identifier Type",
+                            "maxDepth": 0,
+                        }
+                    ],
+                },
+            },
         },
     },
     "2_Creator": {
