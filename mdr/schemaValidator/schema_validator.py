@@ -1,4 +1,4 @@
-from cedar_parser import CedarSchemaName
+from cedarparsingutils.utils import CedarSchemaName
 from utils import Severities, GENERAL_SCHEMA_FIELDS_TO_CHECK
 
 
