@@ -49,45 +49,24 @@ class SchemaValidator:
                 Severities.WARNING, node_id, "Alternative labels are not supported or rendered in MDR"
             )
         if "_valueConstraints" in node:
-            value_constraints = node["_valueConstraints"]
-            if "numberType" in value_constraints:
-                self.utils.log_message(
-                    Severities.WARNING, node_id, "The valueConstraint 'numberType' is not supported or rendered in MDR"
-                )
-            if "minValue" in value_constraints:
-                self.utils.log_message(
-                    Severities.WARNING, node_id, "The valueConstraint 'minValue' is not supported or rendered in MDR"
-                )
-            if "maxValue" in value_constraints:
-                self.utils.log_message(
-                    Severities.WARNING, node_id, "The valueConstraint 'maxValue' is not supported or rendered in MDR"
-                )
-            if "decimalPlace" in value_constraints:
-                self.utils.log_message(
-                    Severities.WARNING,
-                    node_id,
-                    "The valueConstraint 'decimalPlace' is not supported or rendered in MDR",
-                )
-            if "unitOfMeasure" in value_constraints:
-                self.utils.log_message(
-                    Severities.WARNING,
-                    node_id,
-                    "The valueConstraint 'unitOfMeasure' is not supported or rendered in MDR",
-                )
-            if "maxLength" in value_constraints:
-                self.utils.log_message(
-                    Severities.WARNING, node_id, "The valueConstraint 'maxLength' is not supported or rendered in MDR"
-                )
-            if "minLength" in value_constraints:
-                self.utils.log_message(
-                    Severities.WARNING, node_id, "The valueConstraint 'minLength' is not supported or rendered in MDR"
-                )
-            if "temporalType" in value_constraints:
-                self.utils.log_message(
-                    Severities.WARNING,
-                    node_id,
-                    "The valueConstraint 'temporalType' is not supported or rendered in MDR",
-                )
+            schema_value_constraints = node["_valueConstraints"]
+            unsupported_value_constraints = [
+                "numberType",
+                "minValue",
+                "maxValue",
+                "decimalPlace",
+                "unitOfMeasure",
+                "minLength",
+                "maxLength",
+                "temporalType",
+            ]
+            for unsupported_value_constraint in unsupported_value_constraints:
+                if unsupported_value_constraint in schema_value_constraints:
+                    self.utils.log_message(
+                        Severities.WARNING,
+                        node_id,
+                        f"The valueConstraint {unsupported_value_constraint} is not supported or rendered in MDR",
+                    )
 
     def validate_page_break(self, node_id: str):
         """
