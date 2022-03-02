@@ -11,6 +11,7 @@ from utils import (
 
 class SchemaValidator:
     PAGE_BREAK = False
+    NODE_IDS = []
 
     def __init__(self, args):
         self.file = args.file
@@ -27,6 +28,7 @@ class SchemaValidator:
             for node_id in nodes:
                 node = schema["properties"][node_id]
                 self.validate_node(node, node_id)
+            print("-" * 65)
             print(f"Starting general schema validation of '{self.file.name}'")
             self.validate_general_fields(schema)
 
@@ -59,6 +61,10 @@ class SchemaValidator:
             The ID of the node for reference
         """
         schema_name = None
+        if node_id in self.NODE_IDS:
+            self.utils.log_message(Severities.ERROR, node_id, "Duplicate node ID")
+        self.NODE_IDS.append(node_id)
+
         if node["type"] == "object" and "inputType" in node["_ui"]:
             schema_name = self.validate_single_field(node, node_id)
         elif node["type"] == "object" and "order" in node["_ui"]:
@@ -300,7 +306,7 @@ class SchemaValidator:
                 and self.check_field_default_value_valid(field, element_to_check, value)
                 and self.check_field_branches_valid(field, element_to_check, value)
             )
-            if valid is False:
+            if not valid:
                 break
 
         return valid
@@ -367,7 +373,7 @@ class SchemaValidator:
                 self.utils.log_message(
                     Severities.WARNING,
                     field_id,
-                    f"Field ontology branches not exactly the same as general, but URI does match: {current_field['_valueConstraints']['branches']} != {general['_valueConstraints']['branches']}",
+                    "Field ontology branches not exactly the same as general, but URI does match",
                 )
             else:
                 self.utils.log_message(
@@ -390,6 +396,7 @@ def main():
 
     validator = SchemaValidator(args)
     validator.validate()
+    print("-" * 65)
     if not validator.utils.ERROR_COUNT:
         if validator.utils.WARNING_COUNT:
             print("Validation result: OK with warnings. No errors found.")
