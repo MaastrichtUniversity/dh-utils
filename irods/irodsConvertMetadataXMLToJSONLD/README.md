@@ -14,7 +14,7 @@ source ./venv3/bin/activate
 
 pip install jsonschema
 pip install pytz
-pip install -e git+https://github.com/MaastrichtUniversity/irods-rule-wrapper.git@release/customizable_metadata#egg=irods-rule-wrapper
+pip install -e git+https://github.com/MaastrichtUniversity/irods-rule-wrapper.git@develop#egg=irods-rule-wrapper
 
 # To exit the venv
 # deactivate
@@ -23,7 +23,7 @@ pip install -e git+https://github.com/MaastrichtUniversity/irods-rule-wrapper.gi
 # Before usage
 1. Edit the `update_existing_collections.py` file and change the token inside the `schema_url` variable. Example 
     ```
-    schema_url = "https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/release/customizable_metadata/core/static/assets/schemas/DataHub_extended_schema.json?token=YOUR_TOKEN_HERE"
+    schema_url = "https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/develop/core/static/assets/schemas/DataHub_extended_schema.json?token=YOUR_TOKEN_HERE"
     ```
 1. Make necessary changes to the `assets/creators_info_mapping.json` file. This file is for users for which the creator info cannot be retrieved from iCAT.
 
