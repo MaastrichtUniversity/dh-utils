@@ -4,19 +4,8 @@
 * **Description**: Validate if the input schema is following the DataHub schema rules
 * **Developer:** Dean Linssen, DataHub Maastricht University
 * **License:** ?
-* **Depends on:** irods-rule-wrapper
+* **Depends on:** ?
 
-## How to install the dependencies
-```
-sudo apt-get install python3-virtualenv
-python3 -m virtualenv --python=python3 venv3
-source ./venv3/bin/activate
-
-pip install -e git+https://github.com/MaastrichtUniversity/irods-rule-wrapper.git@release/customizable_metadata#egg=irods-rule-wrapper
-
-# To exit the venv
-# deactivate
-```
 # Usage
 ```
 source ./venv3/bin/activate
