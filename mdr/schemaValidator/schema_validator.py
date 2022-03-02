@@ -26,6 +26,7 @@ class SchemaValidator:
 
         """
         self.validate_field_properties(node, node_id)
+        self.check_duplicate_node_id(node_id)
         if schema_name == CedarSchemaName.PAGE_BREAK:
             self.validate_page_break(node_id)
         elif schema_name == CedarSchemaName.TEXTAREA:
@@ -97,6 +98,11 @@ class SchemaValidator:
         if node["type"] == "array":
             self.utils.log_message(Severities.ERROR, node_id, "Textarea can not be multiple")
 
+    def check_duplicate_node_id(self, node_id):
+        if node_id in self.NODE_IDS:
+            self.utils.log_message(Severities.ERROR, node_id, "Duplicate node ID")
+        self.NODE_IDS.append(node_id)
+
     # endregion
     # region Formset validators
 
@@ -122,11 +128,11 @@ class SchemaValidator:
     # region General schema validation
 
     def validate_general_fields(self, schema):
-        for node_id, node in GENERAL_SCHEMA_FIELDS_TO_CHECK.items():
+        for node_id, general_node in GENERAL_SCHEMA_FIELDS_TO_CHECK.items():
             if node_id in schema["properties"]:
-                element = schema["properties"][node_id]
+                current_node = schema["properties"][node_id]
                 try:
-                    self.check_element_is_valid(element, node)
+                    self.check_node_is_valid(current_node, general_node)
                 except KeyError as e:
                     self.utils.log_message(
                         Severities.ERROR, node_id, f"Required element from DataHub General not identical {e}"
@@ -134,13 +140,15 @@ class SchemaValidator:
             else:
                 self.utils.log_message(Severities.ERROR, node_id, "Required element from DataHub General not found")
 
-    def check_element_is_valid(self, element, json_to_check):
+    def check_node_is_valid(self, current_node, general_node):
         valid = True
-        if element["type"] != json_to_check["type"]:
+        if current_node["type"] != general_node["type"]:
             return False
-        for field, value in json_to_check["fields"].items():
+        for field, value in general_node["fields"].items():
             element_to_check = (
-                element["items"]["properties"][field] if element["type"] == "array" else element["properties"][field]
+                current_node["items"]["properties"][field]
+                if current_node["type"] == "array"
+                else current_node["properties"][field]
             )
             valid = (
                 self.check_field_type_valid(field, element_to_check, value)
@@ -247,10 +255,5 @@ class SchemaValidator:
                     f"Field ontology branches not the same as general: {current_field['_valueConstraints']['branches']} != {general['_valueConstraints']['branches']}",
                 )
         return valid
-
-    def check_duplicate_node_id(self, node_id):
-        if node_id in self.NODE_IDS:
-            self.utils.log_message(Severities.ERROR, node_id, "Duplicate node ID")
-        self.NODE_IDS.append(node_id)
 
     # endregion

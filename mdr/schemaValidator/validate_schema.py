@@ -32,8 +32,6 @@ class Validator(SchemaParser):
         self.utils.log_message(Severities.ERROR, node_id, f"schema_name '{node_schema_name}' is not allowed for node")
 
     def parse_child_node(self, node, node_id, parent=None) -> CedarSchemaName:
-        self.cedar_validator.check_duplicate_node_id(node_id)
-
         schema_name = super().parse_child_node(node, node_id, parent)
 
         self.cedar_validator.handle_field_specific_validation(schema_name, node, node_id)
