@@ -112,17 +112,21 @@ class SchemaValidator:
 
         Parameters
         ----------
+        is_array: bool
+            If the caller is coming from an array node
         node: dict
             The node to validate
         node_id: str
             The ID of the node for reference
         """
         if "items" in node:
-            field_ui = node["items"]["_ui"]
+            if "order" in node["items"]["_ui"]:
+                self.utils.log_message(Severities.ERROR, node_id, "Nested formsets are not allowed")
         else:
-            field_ui = node["_ui"]
-        if "order" in field_ui:
-            self.utils.log_message(Severities.ERROR, node_id, "nested formset for field_id")
+            if "order" in node["_ui"]:
+                self.utils.log_message(
+                    Severities.WARNING, node_id, "A formset within a nested object will not be rendered properly in MDR"
+                )
 
     # endregion
     # region General schema validation
