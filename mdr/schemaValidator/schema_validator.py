@@ -147,11 +147,20 @@ class SchemaValidator:
     def check_node_is_valid(self, node_id: str, current_node: dict, general_node: dict):
         self.check_node_type_valid(node_id, current_node, general_node)
         for field, value in general_node["fields"].items():
-            element_to_check = (
-                current_node["items"]["properties"][field]
-                if current_node["type"] == "array"
-                else current_node["properties"][field]
-            )
+            element_to_check = {}
+            try:
+                element_to_check = (
+                    current_node["items"]["properties"][field]
+                    if current_node["type"] == "array"
+                    else current_node["properties"][field]
+                )
+            except KeyError as e:
+                self.utils.log_message(
+                    Severities.ERROR, node_id, f"Required element from DataHub General not identical {e}"
+                )
+            if not element_to_check:
+                continue
+
             self.check_field_type_valid(field, element_to_check, value)
             self.check_field_input_type_valid(field, element_to_check, value)
             self.check_field_hidden_valid(field, element_to_check, value)
