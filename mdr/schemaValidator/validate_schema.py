@@ -54,7 +54,7 @@ class Validator(SchemaParser):
         for field_id in node["_ui"]["order"]:
             current_field = node["properties"][field_id]
             self.parse_child_node(current_field, field_id)
-            self.cedar_validator.check_nested_formset(current_field, field_id)
+            self.cedar_validator.check_nested_formset(current_field, field_id, False)
 
     def parse_nested_array_field(self, node, node_id=None, parent=None):
         """
@@ -73,7 +73,7 @@ class Validator(SchemaParser):
         for field_id in node["items"]["_ui"]["order"]:
             current_field = node["items"]["properties"][field_id]
             self.parse_child_node(current_field, field_id)
-            self.cedar_validator.check_nested_formset(current_field, field_id)
+            self.cedar_validator.check_nested_formset(current_field, field_id, True)
 
 
 def main():

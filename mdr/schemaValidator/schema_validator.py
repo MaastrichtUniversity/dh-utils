@@ -106,26 +106,29 @@ class SchemaValidator:
     # endregion
     # region Formset validators
 
-    def check_nested_formset(self, node: dict, node_id: str):
+    def check_nested_formset(self, node: dict, node_id: str, is_array: bool):
         """
         Check if the formset passed is nested, because that is not allowed
 
         Parameters
         ----------
-        is_array: bool
-            If the caller is coming from an array node
         node: dict
             The node to validate
         node_id: str
             The ID of the node for reference
+        is_array: bool
+            If the caller is coming from an array node
         """
         if "items" in node:
-            if "order" in node["items"]["_ui"]:
-                self.utils.log_message(Severities.ERROR, node_id, "Nested formsets are not allowed")
+            field_ui = node["items"]["_ui"]
         else:
-            if "order" in node["_ui"]:
+            field_ui = node["_ui"]
+        if "order" in field_ui:
+            if is_array:
+                self.utils.log_message(Severities.ERROR, node_id, "Nested formsets are not allowed")
+            else:
                 self.utils.log_message(
-                    Severities.WARNING, node_id, "A formset within a nested object will not be rendered properly in MDR"
+                    Severities.ERROR, node_id, "A formset within a nested object will not be rendered properly in MDR"
                 )
 
     # endregion
