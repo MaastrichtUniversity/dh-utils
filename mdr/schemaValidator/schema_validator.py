@@ -83,7 +83,7 @@ class SchemaValidator:
             self.utils.log_message(Severities.WARNING, node_id, "Only 1 page break is rendered in MDR")
         self.PAGE_BREAK = True
 
-    def validate_textarea(self, node, node_id):
+    def validate_textarea(self, node: dict, node_id: str):
         """
         Validates if the textarea is not 'multiple' because that is not allowed
 
@@ -98,7 +98,7 @@ class SchemaValidator:
         if node["type"] == "array":
             self.utils.log_message(Severities.ERROR, node_id, "Textarea can not be multiple")
 
-    def check_duplicate_node_id(self, node_id):
+    def check_duplicate_node_id(self, node_id: str):
         if node_id in self.NODE_IDS:
             self.utils.log_message(Severities.ERROR, node_id, "Duplicate node ID")
         self.NODE_IDS.append(node_id)
@@ -106,7 +106,7 @@ class SchemaValidator:
     # endregion
     # region Formset validators
 
-    def check_nested_formset(self, node, node_id):
+    def check_nested_formset(self, node: dict, node_id: str):
         """
         Check if the formset passed is nested, because that is not allowed
 
@@ -127,12 +127,12 @@ class SchemaValidator:
     # endregion
     # region General schema validation
 
-    def validate_general_fields(self, schema):
+    def validate_general_fields(self, schema: dict):
         for node_id, general_node in GENERAL_SCHEMA_FIELDS_TO_CHECK.items():
             if node_id in schema["properties"]:
                 current_node = schema["properties"][node_id]
                 try:
-                    self.check_node_is_valid(current_node, general_node)
+                    self.check_node_is_valid(node_id, current_node, general_node)
                 except KeyError as e:
                     self.utils.log_message(
                         Severities.ERROR, node_id, f"Required element from DataHub General not identical {e}"
@@ -140,40 +140,38 @@ class SchemaValidator:
             else:
                 self.utils.log_message(Severities.ERROR, node_id, "Required element from DataHub General not found")
 
-    def check_node_is_valid(self, current_node, general_node):
-        valid = True
-        if current_node["type"] != general_node["type"]:
-            return False
+    def check_node_is_valid(self, node_id: str, current_node: dict, general_node: dict):
+        self.check_node_type_valid(node_id, current_node, general_node)
         for field, value in general_node["fields"].items():
             element_to_check = (
                 current_node["items"]["properties"][field]
                 if current_node["type"] == "array"
                 else current_node["properties"][field]
             )
-            valid = (
-                self.check_field_type_valid(field, element_to_check, value)
-                and self.check_field_input_type_valid(field, element_to_check, value)
-                and self.check_field_hidden_valid(field, element_to_check, value)
-                and self.check_field_required_valid(field, element_to_check, value)
-                and self.check_field_default_value_valid(field, element_to_check, value)
-                and self.check_field_branches_valid(field, element_to_check, value)
+            self.check_field_type_valid(field, element_to_check, value)
+            self.check_field_input_type_valid(field, element_to_check, value)
+            self.check_field_hidden_valid(field, element_to_check, value)
+            self.check_field_required_valid(field, element_to_check, value)
+            self.check_field_default_value_valid(field, element_to_check, value)
+            self.check_field_branches_valid(field, element_to_check, value)
+
+    def check_node_type_valid(self, node_id: str, current_node: dict, general_node: dict):
+        if current_node["type"] != general_node["type"]:
+            self.utils.log_message(
+                Severities.ERROR,
+                node_id,
+                f"Required element from DataHub General not the same type: Current: {current_node['type']} != General: {general_node['type']}",
             )
-            if not valid:
-                break
 
-        return valid
-
-    def check_field_type_valid(self, field_id, current_field, general):
-        valid = current_field["type"] == general["type"]
-        if not valid:
+    def check_field_type_valid(self, field_id: str, current_field: dict, general: dict):
+        if current_field["type"] != general["type"]:
             self.utils.log_message(
                 Severities.ERROR,
                 field_id,
                 f"Field type not the same as general field type: '{current_field['type']}' != '{general['type']}'",
             )
-        return valid
 
-    def check_field_input_type_valid(self, field_id, current_field, general):
+    def check_field_input_type_valid(self, field_id: str, current_field: dict, general: dict):
         valid = True
         if "_ui" in general and "inputType" in general["_ui"]:
             valid = current_field["_ui"]["inputType"] == general["_ui"]["inputType"]
@@ -184,9 +182,7 @@ class SchemaValidator:
                 f"Field input type not the same as general field type: {current_field['_ui']['inputType']} != {general['_ui']['inputType']}",
             )
 
-        return valid
-
-    def check_field_hidden_valid(self, field_id, current_field, general):
+    def check_field_hidden_valid(self, field_id: str, current_field: dict, general: dict):
         general_hidden = "_ui" in general and "hidden" in general["_ui"] and general["_ui"]["hidden"]
         current_hidden = "_ui" in current_field and "hidden" in current_field["_ui"] and current_field["_ui"]["hidden"]
         valid = current_hidden == general_hidden
@@ -197,9 +193,7 @@ class SchemaValidator:
                 f"Field 'hidden' not the same. Current: '{current_hidden}' != General: '{general_hidden}'",
             )
 
-        return valid
-
-    def check_field_required_valid(self, field_id, current_field, general):
+    def check_field_required_valid(self, field_id: str, current_field: dict, general: dict):
         general_required = (
             "_valueConstraints" in general
             and "requiredValue" in general["_valueConstraints"]
@@ -218,9 +212,7 @@ class SchemaValidator:
                 f"Field 'required' not the same as general: Current: '{current_required}' != General: '{general_required}'",
             )
 
-        return valid
-
-    def check_field_default_value_valid(self, field_id, current_field, general):
+    def check_field_default_value_valid(self, field_id: str, current_field: dict, general: dict):
         valid = True
         if "_valueConstraints" in general and "defaultValue" in general["_valueConstraints"]:
             valid = current_field["_valueConstraints"]["defaultValue"] == general["_valueConstraints"]["defaultValue"]
@@ -231,9 +223,7 @@ class SchemaValidator:
                 f"Field 'default value' not the same as general: {current_field['_valueConstraints']['defaultValue']} != {general['_valueConstraints']['defaultValue']}",
             )
 
-        return valid
-
-    def check_field_branches_valid(self, field_id, current_field, general):
+    def check_field_branches_valid(self, field_id: str, current_field: dict, general: dict):
         valid = True
         if "_valueConstraints" in general and "branches" in general["_valueConstraints"]:
             valid = current_field["_valueConstraints"]["branches"] == general["_valueConstraints"]["branches"]
@@ -242,7 +232,6 @@ class SchemaValidator:
                 current_field["_valueConstraints"]["branches"][0]["uri"]
                 == general["_valueConstraints"]["branches"][0]["uri"]
             ):
-                valid = True
                 self.utils.log_message(
                     Severities.WARNING,
                     field_id,
@@ -254,6 +243,5 @@ class SchemaValidator:
                     field_id,
                     f"Field ontology branches not the same as general: {current_field['_valueConstraints']['branches']} != {general['_valueConstraints']['branches']}",
                 )
-        return valid
 
     # endregion
