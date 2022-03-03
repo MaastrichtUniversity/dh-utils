@@ -153,7 +153,9 @@ class SchemaValidator:
             self.check_field_hidden_valid(field, element_to_check, value)
             self.check_field_required_valid(field, element_to_check, value)
             self.check_field_default_value_valid(field, element_to_check, value)
-            self.check_field_branches_valid(field, element_to_check, value)
+            self.check_field_ontology_valid(field, element_to_check, value, "branches")
+            self.check_field_ontology_valid(field, element_to_check, value, "ontologies")
+            self.check_field_ontology_valid(field, element_to_check, value, "classes")
 
     def check_node_type_valid(self, node_id: str, current_node: dict, general_node: dict):
         if current_node["type"] != general_node["type"]:
@@ -223,25 +225,22 @@ class SchemaValidator:
                 f"Field 'default value' not the same as general: {current_field['_valueConstraints']['defaultValue']} != {general['_valueConstraints']['defaultValue']}",
             )
 
-    def check_field_branches_valid(self, field_id: str, current_field: dict, general: dict):
+    def check_field_ontology_valid(self, field_id: str, current_field: dict, general: dict, key: str):
         valid = True
-        if "_valueConstraints" in general and "branches" in general["_valueConstraints"]:
-            valid = current_field["_valueConstraints"]["branches"] == general["_valueConstraints"]["branches"]
+        if "_valueConstraints" in general and key in general["_valueConstraints"]:
+            valid = current_field["_valueConstraints"][key] == general["_valueConstraints"][key]
         if not valid:
-            if (
-                current_field["_valueConstraints"]["branches"][0]["uri"]
-                == general["_valueConstraints"]["branches"][0]["uri"]
-            ):
+            if current_field["_valueConstraints"][key][0]["uri"] == general["_valueConstraints"][key][0]["uri"]:
                 self.utils.log_message(
                     Severities.WARNING,
                     field_id,
-                    "Field ontology branches not exactly the same as general, but URI does match",
+                    f"Field ontology '{key}' not exactly the same as general, but URI does match",
                 )
             else:
                 self.utils.log_message(
                     Severities.ERROR,
                     field_id,
-                    f"Field ontology branches not the same as general: {current_field['_valueConstraints']['branches']} != {general['_valueConstraints']['branches']}",
+                    f"Field ontology '{key}' not the same as general: {current_field['_valueConstraints'][key]} != {general['_valueConstraints'][key]}",
                 )
 
     # endregion
