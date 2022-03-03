@@ -37,7 +37,7 @@ GENERAL_SCHEMA_FIELDS_TO_CHECK = {
             "datasetIdentifier": {
                 "type": "object",
                 "_ui": {"inputType": "textfield", "hidden": True},
-                "_valueConstraints": {"requiredValue": False, "defaultValue": ""},
+                "_valueConstraints": {"requiredValue": True, "defaultValue": ""},
             },
             "datasetIdentifierType": {
                 "type": "object",
