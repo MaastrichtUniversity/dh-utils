@@ -3,6 +3,7 @@ import os
 import xml.etree.cElementTree as ET
 import urllib.request
 import argparse
+import copy
 
 from irods import exception
 from irods.exception import CollectionDoesNotExist, NoResultFound
@@ -22,8 +23,7 @@ class UpdateExistingCollections:
 
     def __init__(self, rule_manager, json_instance_template, json_schema, args):
         self.rule_manager = rule_manager
-        self.json_instance_template = json_instance_template
-        self.base_json_instance_template = json_instance_template
+        self.base_json_instance_template = copy.deepcopy(json_instance_template)
         self.json_schema = json_schema
 
         self.users = self.get_users_info()
@@ -249,7 +249,6 @@ class UpdateExistingCollections:
             for collection in project.subcollections:
                 self.convert_collection_metadata(project.name, collection.name, collection)
                 self.original_pid_requested = False
-                self.json_instance_template = self.base_json_instance_template
 
     def convert_collection_metadata(self, project_id, collection_id, collection_object):
         print(f"\t- Processing {project_id}/{collection_id}")
@@ -282,7 +281,7 @@ class UpdateExistingCollections:
             print(f"\t\t Error: Skip conversion; Creator info missing")
             return
 
-        conversion = Conversion(metadata_xml, self.json_instance_template, avu)
+        conversion = Conversion(metadata_xml, copy.deepcopy(self.base_json_instance_template), avu)
         json_instance = conversion.get_instance()
         self.WARNING_COUNT += conversion.WARNING_COUNT
         validate(instance=json_instance, schema=self.json_schema)
@@ -382,7 +381,7 @@ def main():
     with open("assets/instance_template_min.json", encoding="utf-8") as instance_file:
         json_instance_template = json.load(instance_file)
 
-    schema_url = "https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/release/customizable_metadata/core/static/assets/schemas/DataHub_extended_schema.json?token=GHSAT0AAAAAABQNGBMFCMVM2BPHP4EEM65QYQA6BLA"
+    schema_url = "https://raw.githubusercontent.com/MaastrichtUniversity/dh-mdr/develop/core/static/assets/schemas/DataHub_extended_schema.json?token=GHSAT0AAAAAABQNGBMFWFAUNOJP6T7VNNSMYRKC6QA"
     with urllib.request.urlopen(schema_url) as url:
         json_schema = json.loads(url.read().decode())
 
