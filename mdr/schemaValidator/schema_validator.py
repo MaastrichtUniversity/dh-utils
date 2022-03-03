@@ -149,6 +149,8 @@ class SchemaValidator:
 
     def check_node_is_valid(self, node_id: str, current_node: dict, general_node: dict):
         self.check_node_type_valid(node_id, current_node, general_node)
+        self.check_num_items_valid(node_id, current_node, general_node)
+
         for field, value in general_node["fields"].items():
             element_to_check = {}
             try:
@@ -172,6 +174,14 @@ class SchemaValidator:
             self.check_field_ontology_valid(field, element_to_check, value, "branches")
             self.check_field_ontology_valid(field, element_to_check, value, "ontologies")
             self.check_field_ontology_valid(field, element_to_check, value, "classes")
+
+    def check_num_items_valid(self, node_id: str, current_node: dict, general_node: dict):
+        if current_node["type"] == "array" and current_node["minItems"] != general_node["minItems"]:
+            self.utils.log_message(
+                Severities.ERROR,
+                node_id,
+                f"Required element from DataHub General does not have the same 'minItems' value: Current: {current_node['minItems']} != General: {general_node['minItems']}",
+            )
 
     def check_node_type_valid(self, node_id: str, current_node: dict, general_node: dict):
         if current_node["type"] != general_node["type"]:

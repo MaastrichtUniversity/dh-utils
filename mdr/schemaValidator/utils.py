@@ -137,6 +137,7 @@ GENERAL_SCHEMA_FIELDS_TO_CHECK = {
     },
     "6_Subject": {
         "type": "array",
+        "minItems": 0,
         "fields": {
             "Subject": {
                 "type": "object",
@@ -166,6 +167,7 @@ GENERAL_SCHEMA_FIELDS_TO_CHECK = {
     },
     "7_ContactPerson": {
         "type": "array",
+        "minItems": 1,
         "fields": {
             "contactType": {
                 "type": "object",
@@ -243,6 +245,7 @@ GENERAL_SCHEMA_FIELDS_TO_CHECK = {
     },
     "7_Contributor": {
         "type": "array",
+        "minItems": 0,
         "fields": {
             "contributorType": {
                 "type": "object",
@@ -377,6 +380,7 @@ GENERAL_SCHEMA_FIELDS_TO_CHECK = {
     },
     "12_RelatedIdentifier": {
         "type": "array",
+        "minItems": 0,
         "fields": {
             "relatedResourceIdentifier": {
                 "type": "object",
