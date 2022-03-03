@@ -243,12 +243,13 @@ class SchemaValidator:
         if "_valueConstraints" in general and key in general["_valueConstraints"]:
             valid = current_field["_valueConstraints"][key] == general["_valueConstraints"][key]
         if not valid:
-            if current_field["_valueConstraints"][key][0]["uri"] == general["_valueConstraints"][key][0]["uri"]:
-                self.utils.log_message(
-                    Severities.WARNING,
-                    field_id,
-                    f"Field ontology '{key}' not exactly the same as general, but URI does match",
-                )
+            if current_field["_valueConstraints"][key]:
+                if current_field["_valueConstraints"][key][0]["uri"] == general["_valueConstraints"][key][0]["uri"]:
+                    self.utils.log_message(
+                        Severities.WARNING,
+                        field_id,
+                        f"Field ontology '{key}' not exactly the same as general, but URI does match",
+                    )
             else:
                 self.utils.log_message(
                     Severities.ERROR,
