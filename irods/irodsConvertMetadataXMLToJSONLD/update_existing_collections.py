@@ -23,6 +23,7 @@ class UpdateExistingCollections:
     def __init__(self, rule_manager, json_instance_template, json_schema, args):
         self.rule_manager = rule_manager
         self.json_instance_template = json_instance_template
+        self.base_json_instance_template = json_instance_template
         self.json_schema = json_schema
 
         self.users = self.get_users_info()
@@ -248,6 +249,7 @@ class UpdateExistingCollections:
             for collection in project.subcollections:
                 self.convert_collection_metadata(project.name, collection.name, collection)
                 self.original_pid_requested = False
+                self.json_instance_template = self.base_json_instance_template
 
     def convert_collection_metadata(self, project_id, collection_id, collection_object):
         print(f"\t- Processing {project_id}/{collection_id}")
