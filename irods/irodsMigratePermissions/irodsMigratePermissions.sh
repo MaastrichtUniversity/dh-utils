@@ -102,7 +102,7 @@ echo "-----------------"
 
 # Looping over all projects: run the changePermissions rule for the users and groups
 echo "Granting user/group permissions for new users or groups on all projects..."
-for project in  $(iquest "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'" | grep "COLL_NAME" | cut -d" " -f 3)
+for project in  $(iquest --no-page "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'" | grep "COLL_NAME" | cut -d" " -f 3)
 do
    projectName=${project##*/}
    if [[ "$projectName" == 'P000000010' ]]; then
