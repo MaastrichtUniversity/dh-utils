@@ -14,6 +14,7 @@ class Converter:
         self.dictionary = {}
         self.errors = 0
         self.skipped_azm = 0
+        self.converted = 0
 
     def init_session(self):
         ssl_context = ssl.create_default_context(purpose=ssl.Purpose.SERVER_AUTH, cafile=None, capath=None, cadata=None)
@@ -48,7 +49,10 @@ class Converter:
             print(f"\t Old budget number '{old_budget_number}'")
             new_budget_number = self.convert_budget_number(old_budget_number)
             if new_budget_number:
+                self.converted += 1
                 self.set_new_budget_number(project, new_budget_number)
+
+        self.session.cleanup()
 
     def load_json(self):
         try:
@@ -75,10 +79,12 @@ class Converter:
                 return
             else:
                 new_budget_number = self.dictionary[old_budget_number_stripped]
-                print(f"\t New budget number found! '{new_budget_number['new_number']}'. Department: '{new_budget_number['description_new']}'")
-                return new_budget_number
+                new_number_with_prefix = f"UM-{new_budget_number['new_number']}"
+                print(f"\t New budget number found! '{new_number_with_prefix}'. Department: '{new_budget_number['description_new']}'")
+                return new_number_with_prefix
         else:
-            print("\t Budget number does not conform to old standard -- skipping")
+            print("\t ERROR: Budget number does not conform to old standard")
+            self.errors += 1
 
     def set_new_budget_number(self, project, new_budget_number):
         if self.args.commit:
@@ -90,14 +96,14 @@ class Converter:
 
 
 def main():
-    host = input("Enter your iRODS host:")
-    username = input("Enter your iRODS username:")
-    password = input("Enter your IRODS password:")
-
     parser = argparse.ArgumentParser(description="Convert budget numbers in iRODS")
     parser.add_argument("-c", "--commit", action="store_true", help="commit to actually modify the budget number")
     parser.add_argument("dictionary", type=argparse.FileType("r"), help="Path to the dictionary for the conversion")
     args = parser.parse_args()
+
+    host = input("Enter your iRODS host:")
+    username = input("Enter your iRODS username:")
+    password = input("Enter your IRODS password:")
 
     if not args.dictionary.name.endswith(".json"):
         exit(f"Invalid file path provided. Should be a '.json' file")
@@ -126,6 +132,7 @@ def main():
         print("Conversion OK!")
 
     print(f"\t {converter.skipped_azm} azM numbers skipped")
+    print(f"\t {converter.converted} budget numbers {'' if args.commit else 'to be '}converted")
 
 
 if __name__ == "__main__":

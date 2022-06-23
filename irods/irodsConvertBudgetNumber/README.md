@@ -16,7 +16,7 @@ sudo apt-get install python3-virtualenv
 python3 -m virtualenv --python=python3 venv3
 source ./venv3/bin/activate
 
-pip install python-irodsclient
+pip install python-irodsclient==1.1.3
 
 # To exit the venv
 # deactivate
