@@ -4,7 +4,7 @@
 * **Description**: Loop over all existing projects and modify the budget number to the new format
 * **Developer:** Dean Linssen, DataHub Maastricht University
 * **License:** ?
-* **Depends on:** iRODS icommands
+* **Depends on:** python-irodsclient
 
 # Before usage
 1. Clone this repository
@@ -33,9 +33,3 @@ optional arguments:
   -h, --help            show this help message and exit
   -c, --commit          commit to actually modify the budget number
 ```
-
-# Usage
-1. **[DRY-RUN]** Test the script and review the output with
-    `./irodsSetCollectionsDepositor.sh`
-2. **[COMMIT]** Execute the changes with
-    `./irodsSetCollectionsDepositor.sh --commit`
