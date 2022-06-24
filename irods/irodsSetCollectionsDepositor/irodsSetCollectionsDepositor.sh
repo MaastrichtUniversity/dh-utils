@@ -39,8 +39,7 @@ do
         else
           echo " - AVU creator: " $creator
         fi
-        # Lowercase the creator AVU value for the following query
-        creator="${creator,,}"
+
         # Query username by the email AVU value
         creator_username=$(iquest "SELECT USER_NAME  WHERE META_USER_ATTR_VALUE = '$creator'" | grep USER_NAME | awk '{print $3}')
         if [[ $creator_username == "" ]]; then
