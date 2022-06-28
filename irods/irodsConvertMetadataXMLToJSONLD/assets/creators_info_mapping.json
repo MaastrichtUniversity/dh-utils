@@ -1,0 +1,10 @@
+{
+  "a.user@maastrichtuniversity.nl": {
+    "creatorFullName": "John Doe",
+    "creatorUsername": "auser"
+  },
+  "another.user@maastrichtuniversity.nl": {
+    "creatorFullName": "Jane Doe",
+    "creatorUsername": "buser"
+  }
+}

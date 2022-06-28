@@ -84,10 +84,14 @@ declare -A USER_ID_MAP
 for user in "${!USER_NAME_MAP[@]}";
 do
    userId=$(iadmin lu $user | grep "user_id" | cut -d " " -f 2)
-   if [ ${USER_NAME_MAP["$user"]+_} ]; then
-      # Create the new users, and add it to the same groups
-      newUserName=${USER_NAME_MAP["$user"]}
-      USER_ID_MAP[$userId]="$user"
+   if [ -z $userId ]; then
+      echo "$user doesn't exist in iRODS, check the mapping file"
+   else
+      if [ ${USER_NAME_MAP["$user"]+_} ]; then
+         # Create the new users, and add it to the same groups
+         newUserName=${USER_NAME_MAP["$user"]}
+         USER_ID_MAP[$userId]="$user"
+      fi
    fi
 done
 
@@ -98,9 +102,13 @@ echo "-----------------"
 
 # Looping over all projects: run the changePermissions rule for the users and groups
 echo "Granting user/group permissions for new users or groups on all projects..."
-for project in  $(iquest "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'" | grep "COLL_NAME" | cut -d" " -f 3)
+for project in  $(iquest --no-page "select COLL_NAME where COLL_PARENT_NAME = '/nlmumc/projects'" | grep "COLL_NAME" | cut -d" " -f 3)
 do
    projectName=${project##*/}
+   if [[ "$projectName" == 'P000000010' ]]; then
+    echo " * Skip P000000010 (MDL-IBD)"
+    continue
+   fi
    echo " * Project: $project   $projectName"
    permissionsString=""
 
@@ -122,8 +130,10 @@ do
       fi
    done< <(iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project'" )
 
-    [[ $DRY_RUN == "false" ]] && irule "changeProjectPermissions(*project, '$permissionsString')" *project="$projectName" ruleExecOut
-
-    echo "  - irule \"changeProjectPermissions(*project, '$permissionsString')\" *project=\"$projectName\" ruleExecOut"
+    if [[ "$permissionsString" != "" ]]; then
+        [[ $DRY_RUN == "false" ]] && irule "changeProjectPermissions(*project, '$permissionsString')" *project="$projectName" ruleExecOut
+        echo "  - irule \"changeProjectPermissions(*project, '$permissionsString')\" *project=\"$projectName\" ruleExecOut"
+    else
+        echo "Skipping project \"$projectName\" because there is nothing to migrate"
+    fi
 done
-

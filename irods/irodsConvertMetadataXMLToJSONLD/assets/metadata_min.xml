@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<metadata>
+    <project>P000000014</project>
+    <title>Dataset Test Title</title>
+    <description/>
+    <date>2021-10-29</date>
+    <creator>jonathan.melius@maastrichtuniversity.nl</creator>
+    <organism id=""/>
+    <tissue id=""/>
+    <technology id=""/>
+    <article/>
+    <factors>
+        <factor/>
+    </factors>
+    <contact>
+        <lastName/>
+        <firstName/>
+        <midInitials/>
+        <email/>
+        <phone/>
+        <address/>
+        <affiliation/>
+        <role/>
+    </contact>
+</metadata>
