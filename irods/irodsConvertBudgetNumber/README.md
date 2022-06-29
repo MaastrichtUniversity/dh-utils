@@ -17,6 +17,7 @@ python3 -m virtualenv --python=python3 venv3
 source ./venv3/bin/activate
 
 pip install python-irodsclient==1.1.3
+pip install git+https://github.com/MaastrichtUniversity/dh-python-irods-utils.git@v1.0.5#egg=dh-python-irods-utils
 
 # To exit the venv
 # deactivate

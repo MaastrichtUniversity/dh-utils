@@ -4,6 +4,7 @@ import json
 
 from irods.session import iRODSSession
 from irods.meta import iRODSMeta
+from dhpythonirodsutils import validators, exceptions
 
 
 class Converter:
@@ -48,7 +49,7 @@ class Converter:
             old_budget_number = self.get_budget_number(project)
             print(f"\t Old budget number '{old_budget_number}'")
             new_budget_number = self.convert_budget_number(old_budget_number)
-            if new_budget_number:
+            if new_budget_number and self.validate_budget_number(new_budget_number):
                 self.converted += 1
                 self.set_new_budget_number(project, new_budget_number)
 
@@ -60,6 +61,14 @@ class Converter:
         except ValueError:
             print("Error encountered while parsing JSON -- exiting")
             exit(1)
+
+    def validate_budget_number(self, budget_number):
+        try:
+            validators.validate_budget_number(budget_number)
+            return True
+        except exceptions.ValidationError:
+            print("\t ERROR: New budget number does not conform to new format")
+            self.errors += 1
 
     @staticmethod
     def get_budget_number(project):
