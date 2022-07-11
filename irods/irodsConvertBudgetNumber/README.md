@@ -4,7 +4,7 @@
 * **Description**: Loop over all existing projects and modify the budget number to the new format
 * **Developer:** Dean Linssen, DataHub Maastricht University
 * **License:** ?
-* **Depends on:** python-irodsclient
+* **Depends on:** python-irodsclient >=1.1.3
 
 # Before usage
 1. Clone this repository

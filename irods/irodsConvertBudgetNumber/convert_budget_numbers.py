@@ -50,8 +50,8 @@ class Converter:
             print(f"\t Old budget number '{old_budget_number}'")
             new_budget_number = self.convert_budget_number(old_budget_number)
             if new_budget_number and self.validate_budget_number(new_budget_number):
-                self.converted += 1
                 self.set_new_budget_number(project, new_budget_number)
+                self.converted += 1
 
         self.session.cleanup()
 
@@ -89,7 +89,10 @@ class Converter:
             else:
                 new_budget_number = self.dictionary[old_budget_number_stripped]
                 new_number_with_prefix = f"UM-{new_budget_number['new_number']}"
-                print(f"\t New budget number found! '{new_number_with_prefix}'. Department: '{new_budget_number['description_new']}'")
+                print(
+                    f"\t New budget number found! '{new_number_with_prefix}'. "
+                    f"Department: '{new_budget_number['description_new']}'"
+                )
                 return new_number_with_prefix
         else:
             print("\t ERROR: Budget number does not conform to old standard")
@@ -98,7 +101,7 @@ class Converter:
     def set_new_budget_number(self, project, new_budget_number):
         if self.args.commit:
             print(f"\t Setting new budget number for '{project.path}' to '{new_budget_number}'")
-            new_meta = iRODSMeta('responsibleCostCenter', str(new_budget_number))
+            new_meta = iRODSMeta("responsibleCostCenter", str(new_budget_number))
             project.metadata[new_meta.name] = new_meta
         else:
             print(f"\t -- skipping setting new budget number. Running in dry mode")
