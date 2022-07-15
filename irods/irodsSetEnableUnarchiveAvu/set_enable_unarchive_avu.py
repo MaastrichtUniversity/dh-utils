@@ -45,6 +45,7 @@ class AvuSetter:
             if has_avu_already_set:
                 print(f"\t AVU enableUnarchive already set")
                 self.already_set += 1
+                self.get_enable_archive_avu(project)
             else:
                 enable_archive_value = self.get_enable_archive_avu(project)
                 value_to_set = enable_archive_value if enable_archive_value else "false"
