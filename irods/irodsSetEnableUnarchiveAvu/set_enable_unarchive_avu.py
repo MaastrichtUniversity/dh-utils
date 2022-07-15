@@ -31,7 +31,7 @@ class AvuSetter:
             "port": 1247,
             "zone": "nlmumc",
             "irods_client_server_policy": self.config["IRODS_CLIENT_SERVER_POLICY"],
-            # **ssl_settings,
+            **ssl_settings,
         }
 
         self.session = iRODSSession(**irods_session_settings)
