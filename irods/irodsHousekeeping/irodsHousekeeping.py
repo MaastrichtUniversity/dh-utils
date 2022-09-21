@@ -164,7 +164,7 @@ def missing_avu_non_sql(session, avu_name, irods_obj_type, obj_name_like=None, n
     else:
         raise Exception("iRODS object type not supported.")
 
-    objs = session.query()
+    objs = session.query(obj_model, obj_model_meta)
 
     if obj_name_like:
         objs = objs.filter(Criterion(f"{'not like' if not_like else 'like'}", obj_model.name, obj_name_like))
@@ -178,7 +178,7 @@ def missing_avu_non_sql(session, avu_name, irods_obj_type, obj_name_like=None, n
         else:
             objs_dict[obj[obj_model.name]] += 0
 
-    return [k for k, v in objs.items() if v == 0]
+    return [k for k, v in objs_dict.items() if v == 0]
 
 
 def main():
