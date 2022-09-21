@@ -139,6 +139,8 @@ def missing_avu_sql(session, avu_name, irods_obj_type, obj_name_like=None, not_l
         AND o1.{obj_column_id} = o2.{obj_column_id}
     );
     """
+    log.debug("SQL QUERY:")
+    log.debug(sql)
     # FIXME: concurrency! Will crash
     alias = f'sql_missing_avu_{irods_obj_type}_{avu_name}'
     columns = [obj_model_name]
@@ -151,7 +153,7 @@ def missing_avu_sql(session, avu_name, irods_obj_type, obj_name_like=None, not_l
         objs_found = None
     finally:
         # If SQL query goes wrong, we should un-register the query.
-        # This should be equivalent (?) to `iadmin rsq $alias` (where $alias is: f'sql_colls_missing_avu_{avu_name}')
+        # This should be equivalent (?) to `iadmin rsq $alias` (where $alias is: f'sql_missing_avu_{irods_obj_type}_{avu_name}')
         query.remove()
 
     return objs_found
@@ -208,24 +210,24 @@ def main():
         log.debug("Checking missing AVUs for project collections..")
         for avu_name in PROJ_COLLS_AVU_LIST:
             log.debug("Checking AVU {avu_name}..")
-            #colls_missing_avu = missing_avu_non_sql(session, avu_name, 'collection', proj_colls_path_like)
+            #colls_missing_avu = missing_avu_non_sql(session, avu_name, 'Collection', PROJ_COLLS_PATH_LIKE)
             colls_missing_avu = missing_avu_sql(session, avu_name, 'Collection', PROJ_COLLS_PATH_LIKE)
             if colls_missing_avu:
                 for coll in colls_missing_avu:
-                    log.warn(f"collection {coll} is missing avu \"{avu_name}\"")
+                    log.warn(f"Collection {coll} is missing AVU \"{avu_name}\"")
             else:
-                log.info(f"no project collection seems to be missing avu \"{avu_name}\"")
+                log.info(f"No project collection seems to be missing AVU \"{avu_name}\"")
 
         log.debug("Checking missing AVUS for users..")
         for avu_name in USERS_AVU_LIST:
             log.debug("Checking AVU {avu_name}..")
-            #users_missing_avu = missing_avu_non_sql(session, avu_name, 'collection', proj_colls_path_like)
+            #users_missing_avu = missing_avu_non_sql(session, avu_name, 'User', USERS_NOT_LIKE, not_like=True)
             users_missing_avu = missing_avu_sql(session, avu_name, 'User', USERS_NOT_LIKE, not_like=True)
             if users_missing_avu:
                 for user in users_missing_avu:
-                    log.warn(f"User {user} is missing avu \"{avu_name}\"")
+                    log.warn(f"User {user} is missing AVU \"{avu_name}\"")
             else:
-                log.info(f"No user seems to be missing avu \"{avu_name}\"")
+                log.info(f"No user seems to be missing AVU \"{avu_name}\"")
 
 
 if __name__ == "__main__":
