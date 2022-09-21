@@ -120,11 +120,16 @@ def missing_avu_sql(session, avu_name, irods_obj_type, obj_name_like=None, not_l
     #      And ./README.md
     sql_name_constraint_and = ''
     if obj_name_like:
-        sql_name_constraint_and = f"o1.{obj_column_name} {'not like' if not_like else 'like'} '{obj_name_like}' and"
+        sql_name_constraint_and = f"o1.{obj_column_name} {'not like' if not_like else 'like'} '{obj_name_like}' AND"
+    sql_only_user_type_and = ''
+    if irods_obj_type == 'User':
+        # We are not interested in groups nor admins (?)
+        # See: https://github.com/irods/python-irodsclient#listing-users-and-groups--calculating-group-membership
+        sql_only_user_type_and = "o1.user_type_name = 'rodsuser' AND"
     sql = f"""
     SELECT {obj_column_name}
     FROM {obj_table} as o1
-    WHERE {sql_name_constraint_and}
+    WHERE {sql_name_constraint_and} {sql_only_user_type_and}
     NOT EXISTS (
         SELECT 1
         FROM {obj_table} as o2
@@ -168,6 +173,9 @@ def missing_avu_non_sql(session, avu_name, irods_obj_type, obj_name_like=None, n
 
     if obj_name_like:
         objs = objs.filter(Criterion(f"{'not like' if not_like else 'like'}", obj_model.name, obj_name_like))
+
+    if irods_obj_type == 'User':
+        objs = objs.filter(User.type == 'rodsuser')
 
     # this can probably be done more elegantly...
     objs_dict = defaultdict(int)
