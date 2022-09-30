@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# Skeleton based on: irodsDropzoneValidator.py
 
 import os
 import sys
@@ -7,8 +6,8 @@ import logging
 import argparse
 from collections import defaultdict
 from irods.session import iRODSSession
-from irods.models import Collection, CollectionMeta, User, UserMeta
-from irods.column import Criterion
+from irods.models import Collection, CollectionMeta, User, UserMeta, Resource, DataObject
+from irods.column import Criterion, In
 from irods.query import SpecificQuery
 from irods.exception import CAT_SQL_ERR, CAT_NO_ROWS_FOUND
 
@@ -54,6 +53,14 @@ USERS_AVU_LIST = [
     'pendingDeletionProcedure'
 ]
 
+# resources on which replicas of data objects will be checked for (counted):
+# NOTE: ONLY APPLIES IF AUTO_REPL_RESC is False
+AUTO_REPL_RESC = True
+REPL_RESCS = [
+    'UM-hnas-4k-repl',
+    'UM-hnas-4k',
+]
+
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -67,6 +74,7 @@ def parse_args():
     return parser.parse_args()
 
 
+# Skeleton (logging, irods_session) based on: irodsDropzoneValidator.py
 def setup_custom_logger(name, log_level):
     formatter = logging.Formatter(fmt="%(asctime)s - %(levelname)7s - %(module)s - %(message)s")
 
@@ -92,7 +100,7 @@ def irods_session(env_file=None):
         # Build iRODS connection
         session = iRODSSession(irods_env_file=env_file)
     except FileNotFoundError:
-        log.error(f"No \"{default_env_file}\"` found. Use iinit to make one.")
+        log.error(f"No \"{default_env_file}\" found. Use iinit to make one.")
         return None
 
     return session
@@ -182,6 +190,10 @@ def missing_avu_non_sql(session, avu_name, irods_obj_type, obj_name_like=None, n
     # this can probably be done more elegantly...
     objs_dict = defaultdict(int)
 
+    # 'obj' will be a dict with keys being the aggregate of fields in obj_model and obj_model_meta.
+    # Since there can be multiple AVUs (obj_model_meta) attached to a single a row in (obj_model),
+    # multiple obj could contain the same obj[obj_model.name]
+    # Check fields here: https://github.com/irods/python-irodsclient/blob/v1.0.0/irods/models.py
     for obj in objs:
         if (obj_model_meta.name, avu_name) in obj.items():
             objs_dict[obj[obj_model.name]] += 1
@@ -191,48 +203,102 @@ def missing_avu_non_sql(session, avu_name, irods_obj_type, obj_name_like=None, n
     return [k for k, v in objs_dict.items() if v == 0]
 
 
+# Returns list of logical paths to iRODS data objects that have less than num_replicas
+def missing_replicated_non_sql(session, auto_repl_rescs=True, repl_rescs_names=None, num_replicas=2, not_like=False):
+    if auto_repl_rescs and repl_rescs_names:
+        log.debug("Was ask to discover replication resources and was also provided a list: will auto discover.")
+
+    # list of IDs of 'storage resources' under replication
+    repl_rescs_ids = None
+
+    if auto_repl_rescs:
+        log.debug("Will try to find storage resources under replication")
+        # the 'children' field seems to not be set :/
+        # find all IDs for all  'coordinating resources' of type 'replication' (see README)
+        repl_coor_rescs = session.query(Resource).filter(Resource.type == 'replication')
+        repl_coor_rescs_ids = [repl_resc[Resource.id] for repl_resc in repl_coor_rescs]
+        # find all 'storage resources' under them
+        repl_rescs = session.query(Resource).filter(In(Resource.parent, repl_coor_rescs_ids))
+    else:
+        repl_rescs = session.query(Resource).filter(In(Resource.name, repl_rescs_names))
+
+    repl_rescs_ids = [repl_resc[Resource.id] for repl_resc in repl_rescs]
+    log.debug(f"Replication rescs ids: {repl_rescs_ids}")
+
+    # Query data objects living under replication resources
+    objs = session.query(DataObject, Collection).filter(In(DataObject.resc_id, repl_rescs_ids))
+
+    # count replicas of each object
+    objs_dict = defaultdict(int)
+    for obj in objs:
+        #log.debug(f"{obj[Collection.name]} {obj[DataObject.name]}")
+        objs_dict[obj[Collection.name] + "/" + obj[DataObject.name]] += 1
+
+    # filter objs with < num_replicas
+    # Alternative: we could use DataObject.id for the dict key and then
+    # query Collection.name separately instead of that concatenation
+    return [k for k, v in objs_dict.items() if v < num_replicas]
+
+
 def main():
+    warns = 0
     args = parse_args()
 
     with irods_session(args.env_file) as session:
-        # TODO .. you could refactor this a bit to avoid some duplication, but just testing for now..
+        # TODO: this can be refactored to avoid duplication!
         log.debug("Checking missing AVUs for projects..")
         for avu_name in PROJS_AVU_LIST:
-            log.debug("Checking AVU {avu_name}..")
-            #projs_missing_avu = missing_avu_non_sql(session, avu_name, 'Collection', PROJS_PATH_LIKE)
-            projs_missing_avu = missing_avu_sql(session, avu_name, 'Collection', PROJS_PATH_LIKE)
+            log.debug(f"Checking AVU {avu_name}..")
+            projs_missing_avu = missing_avu_non_sql(session, avu_name, 'Collection', PROJS_PATH_LIKE)
+            #projs_missing_avu = missing_avu_sql(session, avu_name, 'Collection', PROJS_PATH_LIKE)
             if projs_missing_avu:
                 for proj in projs_missing_avu:
+                    warns += 1
                     log.warn(f"Project {proj} is missing AVU \"{avu_name}\"")
             else:
                 log.info(f"No project seems to be missing AVU \"{avu_name}\"")
 
         log.debug("Checking missing AVUs for project collections..")
         for avu_name in PROJ_COLLS_AVU_LIST:
-            log.debug("Checking AVU {avu_name}..")
-            #colls_missing_avu = missing_avu_non_sql(session, avu_name, 'Collection', PROJ_COLLS_PATH_LIKE)
-            colls_missing_avu = missing_avu_sql(session, avu_name, 'Collection', PROJ_COLLS_PATH_LIKE)
+            log.debug(f"Checking AVU {avu_name}..")
+            colls_missing_avu = missing_avu_non_sql(session, avu_name, 'Collection', PROJ_COLLS_PATH_LIKE)
+            #colls_missing_avu = missing_avu_sql(session, avu_name, 'Collection', PROJ_COLLS_PATH_LIKE)
             if colls_missing_avu:
                 for coll in colls_missing_avu:
+                    warns += 1
                     log.warn(f"Collection {coll} is missing AVU \"{avu_name}\"")
             else:
                 log.info(f"No project collection seems to be missing AVU \"{avu_name}\"")
 
         log.debug("Checking missing AVUS for users..")
         for avu_name in USERS_AVU_LIST:
-            log.debug("Checking AVU {avu_name}..")
-            #users_missing_avu = missing_avu_non_sql(session, avu_name, 'User', USERS_NOT_LIKE, not_like=True)
-            users_missing_avu = missing_avu_sql(session, avu_name, 'User', USERS_NOT_LIKE, not_like=True)
+            log.debug(f"Checking AVU {avu_name}..")
+            users_missing_avu = missing_avu_non_sql(session, avu_name, 'User', USERS_NOT_LIKE, not_like=True)
+            #users_missing_avu = missing_avu_sql(session, avu_name, 'User', USERS_NOT_LIKE, not_like=True)
             if users_missing_avu:
                 for user in users_missing_avu:
+                    warns += 1
                     log.warn(f"User {user} is missing AVU \"{avu_name}\"")
             else:
                 log.info(f"No user seems to be missing AVU \"{avu_name}\"")
+
+        log.debug("Checking not-sufficiently replicated data objects...")
+        missing_repls = missing_replicated_non_sql(session, auto_repl_rescs=AUTO_REPL_RESC, repl_rescs_names=REPL_RESCS)
+        for missing_repl in missing_repls:
+            warns += 1
+            log.warn(f"Data object: {missing_repl} is not sufficiently replicated.")
+
+        if warns != 0:
+            log.warn(f"There were a total of {warns} WARNINGs")
+        else:
+            log.info(f"There were no warnings. All seems to be in order.")
+
+        return warns == 0
 
 
 if __name__ == "__main__":
     try:
         log = setup_custom_logger("irodsHousekeeping", logging.INFO)
-        sys.exit(main())
+        sys.exit(not main())
     except KeyboardInterrupt:
-        sys.exit(1)
+        sys.exit(2)
