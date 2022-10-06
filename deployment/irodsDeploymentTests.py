@@ -18,19 +18,13 @@ def parse_args():
                         required=False, type=str, help="Path to irods environment file containing connection settings.")
     parser.add_argument("-x", "--exclusions", nargs="+", default="bundleResc, demoResc, rootResc", action='store',
                         required=False, type=str, help="Resources to exclude in resource availability check.")
-    parser.add_argument("-p", "--project", default=None, action='store',
-                        required=False, type=str,
-                        help="iRODS project ID. If none is given, will default to P000000001.")
-    parser.add_argument("-c", "--collection", default=None, action='store',
-                        required=False, type=str,
-                        help="iRODS collection ID. If none is given, will default to C000000001.")
     parser.add_argument("-f", "--source_file", default=None, action='store',
-                        required=True, type=str, help="Local path to source file.")
+                        required=False, type=str, help="Local path to source file.")
     parser.add_argument("-n", "--name", default=None, action='store',
-                        required=True, type=str, help="Name of file, how it should be stored in iRODS.")
+                        required=False, type=str, help="Name of file, how it should be stored in iRODS.")
     parser.add_argument("-d", "--dest", default=None, action='store',
-                        required=True, type=str, help="Destination path to locally store file from iRODS.")
-
+                        required=False, type=str, help="Destination path to locally store file from iRODS.")
+    parser.add_argument("-o", "--overwrite", required=False, action='store_true', help="Overwrite files if they exist.")
 
     return parser.parse_args()
 
@@ -46,7 +40,7 @@ def query_yes_no(question, default="yes"):
 
     The "answer" return value is True for "yes" or False for "no".
     """
-    valid = {"yes": True, "y": True, "no": False, "n": False}
+    valid = {"yes": "yes", "y": "yes", "no": "no", "n": "no"}
     if default is None:
         prompt = " [y/n] "
     elif default == "yes":
@@ -99,6 +93,14 @@ def irods_session(env_file=None):
     return session
 
 
+def get_resources(session):
+    repl_coor_rescs = session.query(Resource).filter(Resource.type == 'replication')
+    repl_coor_rescs_names = [repl_resc[Resource.name] for repl_resc in repl_coor_rescs]
+    log.info(f"Found Replication resource(s): {repl_coor_rescs_names}")
+
+    return repl_coor_rescs_names
+
+
 # Slightly modified, based on "check_irods_resources_availability.py" Nagios check
 def check_resources(session, exclusions):
     resources = [iRODSResource(session.resources, query_result) for query_result in session.query(Resource).all()]
@@ -111,56 +113,58 @@ def check_resources(session, exclusions):
             log.error(f"Resource '{resource.name}' has status DOWN in iRODS")
         elif resource.status == "up":
             log.info(f"Resource '{resource.name}' seems available! (status: up)")
-        elif resource.status == None:
+        elif resource.status is None:
             log.warning(f"Resource '{resource.name}' seems available! (undefined status)")
         else:
             log.warning(f"Resource '{resource.name}' has status '{resource.status}'")
 
 
-def check_path(session, project_id, collection_id):
-    project = f"/nlmumc/projects/{project_id}"
-    projectCollection = f"/nlmumc/projects/{project_id}/{collection_id}"
-    if not session.collections.exists(project):
-        log.error(f"The project {project_id} does not exist. Make sure it exists before proceeding!")
+def check_path(session):
+    path = f"/nlmumc/home/{session.username}"
+    if not session.collections.exists(path):
+        log.error(f"The path {path} does not exist. Make sure it exists before proceeding!")
         log.error(f"Exiting...")
-        sys.exit(0)
-    elif not session.collections.exists(projectCollection):
-        log.error(f"The collection {collection_id} does not exist. Make sure it exists before proceeding!")
-        log.error(f"Exiting...")
-        sys.exit(0)
+        sys.exit(1)
 
 
-def check_file(session, project_id, collection_id, name):
-    filePath = f"/nlmumc/projects/{project_id}/{collection_id}/{name}"
-    if session.data_objects.exists(filePath):
-        yesNo = query_yes_no(f"The filename '{name}' already exists at the chosen path, do you want to overwrite the file?")
-        if yesNo == False:
-            log.info(f"Exiting... Please retry using a different filename.")
-            sys.exit(0)
+def check_file(session, resources, name, overwrite):
+    path = f"/nlmumc/home/{session.username}"
+    file_path = f"/nlmumc/home/{session.username}/{name}"
+    for resource in resources:
+        if session.data_objects.exists(str(file_path+"_"+resource)):
+            if overwrite == False:
+                yes_no = query_yes_no(f"The filename '{name}_{resource}' already exists at {path}, resource {resource}. Do you want to overwrite the file?")
+                if yes_no == "no":
+                    log.info(f"Exiting... Please retry using a different filename.")
+                    sys.exit(1)
 
 
-def put_file(session, project_id, collection_id, name, source_file):
-    path = f"/nlmumc/projects/{project_id}/{collection_id}/{name}"
-    log.info(f"Putting file: '{name}' from project: '{project_id}', collection: '{collection_id}'")
+def put_file(session, resources, name, source_file):
+    path = f"/nlmumc/home/{session.username}/{name}"
     try:
-        session.data_objects.put(source_file, path)
-        log.info(f"Put operation successful!")
+        for resource in resources:
+            log.info(f"Putting file '{name}_{resource}' to '{path}', resource '{resource}'")
+            session.data_objects.put(source_file, str(path+"_"+resource), destRescName=resource)
+            # session.data_objects.replicate(path, resource="arcRescSURF01")
+            log.info(f"Put operation to '{resource}' successful!")
     except (
             exception.DataObjectDoesNotExist,
             exception.SYS_FILE_DESC_OUT_OF_RANGE,
+            exception.UNIX_FILE_CREATE_ERR,
             KeyError,
     ):
         log.error(f"Error: during put operation. Exiting...")
-        sys.exit(0)
+        sys.exit(1)
 
 
-def get_file(session, project_id, collection_id, name, dest):
-    path = f"/nlmumc/projects/{project_id}/{collection_id}/{name}"
-    log.info(f"Getting file: '{name}' from project: '{project_id}', collection: '{collection_id}'")
-    log.info(f"Destination: '{dest}'")
+def get_file(session, resources, name, dest):
+    path = f"/nlmumc/home/{session.username}/{name}"
     try:
-        session.data_objects.get(path, dest)
-        log.info(f"Get operation successful!")
+        for resource in resources:
+            log.info(f"Getting file '{name}_{resource}' from '{path}', resource '{resource}")
+            log.info(f"Destination: '{dest}'")
+            session.data_objects.get(str(path+"_"+resource), dest)
+            log.info(f"Get operation successful!")
     except (
             exception.OVERWRITE_WITHOUT_FORCE_FLAG,
             KeyError,
@@ -169,43 +173,45 @@ def get_file(session, project_id, collection_id, name, dest):
         return 1
 
 
-def remove_file(session, project_id, collection_id, name):
-    path = f"/nlmumc/projects/{project_id}/{collection_id}/{name}"
-    log.info(f"Removing file: '{name}' from project: '{project_id}', collection: '{collection_id}'")
+def remove_file(session, resources, name):
+    path = f"/nlmumc/home/{session.username}/{name}"
     try:
-        session.data_objects.get(path).unlink(force = True)
-        log.info(f"Removal successful!")
+        for resource in resources:
+            log.info(f"Removing file '{name}_{resource}' from '{path}', resource '{resource}'")
+            session.data_objects.get(str(path+"_"+resource)).unlink(force=True)
+            log.info(f"Removal from resource: '{resource}' successful!")
     except (
             exception.DataObjectDoesNotExist,
             KeyError,
     ):
         log.error(f"Error: during remove operation. Exiting...")
-        sys.exit(0)
+        sys.exit(1)
 
 
 def main():
     args = parse_args()
+    print(args)
     with irods_session(args.env_file) as session:
+        resources = get_resources(session)
+        print()
+
         log.info("START: checking resource availability...")
         check_resources(session, args.exclusions)
+        print()
+
         log.info("START: putting, getting and removing file...")
-        if args.project is None:
-            args.project = "P000000001"
-            log.warning("No project given, defaulting to project: P000000001")
-        if args.collection is None:
-            args.collection = "C000000001"
-            log.warning("No collection given, defaulting to collection: C000000001")
-        check_path(session, args.project, args.collection)
-        check_file(session, args.project, args.collection, args.name)
-        put_file(session, args.project, args.collection, args.name, args.source_file)
-        if get_file(session, args.project, args.collection, args.name, args.dest) == 1:
-            remove_file(session, args.project, args.collection, args.name)
+        check_path(session)
+        check_file(session, resources, args.name, args.overwrite)
+        put_file(session, resources, args.name, args.source_file)
+        if get_file(session, resources, args.name, args.dest) == 1:
+            remove_file(session, resources, args.name)
         else:
-            remove_file(session, args.project, args.collection, args.name)
+            remove_file(session, resources, args.name)
+
 
 if __name__ == "__main__":
     try:
-        log = setup_custom_logger(__name__, logging.INFO)
-        sys.exit(not main())
+        log = setup_custom_logger("irodsDeploymentTests", logging.INFO)
+        sys.exit(main())
     except KeyboardInterrupt:
         sys.exit(2)
