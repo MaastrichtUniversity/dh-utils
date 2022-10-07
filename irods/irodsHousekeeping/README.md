@@ -119,3 +119,5 @@ OR, does maybe iRODS keep track of replicas some other way?
 * Documentation
 * Ended up removing code to do "Not In resource list". Just didn't seem worth it. But maybe I'm wrong?
 * Output should be more uniform? Parseable?
+* Check users that have: pendingSramInvite & pendingDeletionProcedure ?
+* Check projects that have ingest gone wrong AVU?

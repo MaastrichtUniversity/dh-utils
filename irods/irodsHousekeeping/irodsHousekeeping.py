@@ -22,7 +22,6 @@ USERS_NOT_LIKE = 'service-%'
 PROJS_AVU_LIST = [
     'authorizationPeriodEndDate',
     'dataSteward',
-    'disableArchive',
     'enableArchive',
     'enableContributorEditMetadata',
     'enableDropzoneSharing',
@@ -46,11 +45,9 @@ PROJ_COLLS_AVU_LIST = [
 USERS_AVU_LIST = [
     'displayName',
     'email',
-    'pendingSramInvite',
     'voPersonExternalID',
     'voPersonExternalAffiliation',
     'eduPersonUniqueID',
-    'pendingDeletionProcedure'
 ]
 
 # resources on which replicas of data objects will be checked for (counted):
