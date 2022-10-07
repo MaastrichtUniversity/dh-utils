@@ -131,12 +131,11 @@ def check_file(session, resources, name, overwrite):
     path = f"/nlmumc/home/{session.username}"
     file_path = f"/nlmumc/home/{session.username}/{name}"
     for resource in resources:
-        if session.data_objects.exists(str(file_path+"_"+resource)):
-            if overwrite == False:
-                yes_no = query_yes_no(f"The filename '{name}_{resource}' already exists at {path}, resource {resource}. Do you want to overwrite the file?")
-                if yes_no == "no":
-                    log.info(f"Exiting... Please retry using a different filename.")
-                    sys.exit(1)
+        if session.data_objects.exists(str(file_path+"_"+resource)) and overwrite is False:
+            yes_no = query_yes_no(f"The filename '{name}_{resource}' already exists at {path}, resource {resource}. Do you want to overwrite the file?")
+            if yes_no == "no":
+                log.info(f"Exiting... Please retry using a different filename.")
+                sys.exit(1)
 
 
 def put_file(session, resources, name, source_file):
