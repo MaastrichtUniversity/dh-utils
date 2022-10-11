@@ -247,7 +247,7 @@ def main():
         for avu_name in PROJS_AVU_LIST:
             log.debug(f"Checking AVU {avu_name}..")
             projs_missing_avu = missing_avu_non_sql(session, avu_name, 'Collection', PROJS_PATH_LIKE)
-            #projs_missing_avu = missing_avu_sql(session, avu_name, 'Collection', PROJS_PATH_LIKE)
+            #projs_missing_avu = missing_avu_sql(session, avu_name, 'Collection', PROJS_PATH_LIKE) # NOT TESTED
             if projs_missing_avu:
                 for proj in projs_missing_avu:
                     warns += 1
@@ -259,7 +259,7 @@ def main():
         for avu_name in PROJ_COLLS_AVU_LIST:
             log.debug(f"Checking AVU {avu_name}..")
             colls_missing_avu = missing_avu_non_sql(session, avu_name, 'Collection', PROJ_COLLS_PATH_LIKE)
-            #colls_missing_avu = missing_avu_sql(session, avu_name, 'Collection', PROJ_COLLS_PATH_LIKE)
+            #colls_missing_avu = missing_avu_sql(session, avu_name, 'Collection', PROJ_COLLS_PATH_LIKE) # NOT TESTED
             if colls_missing_avu:
                 for coll in colls_missing_avu:
                     warns += 1
@@ -271,7 +271,7 @@ def main():
         for avu_name in USERS_AVU_LIST:
             log.debug(f"Checking AVU {avu_name}..")
             users_missing_avu = missing_avu_non_sql(session, avu_name, 'User', USERS_NOT_LIKE, not_like=True)
-            #users_missing_avu = missing_avu_sql(session, avu_name, 'User', USERS_NOT_LIKE, not_like=True)
+            #users_missing_avu = missing_avu_sql(session, avu_name, 'User', USERS_NOT_LIKE, not_like=True) # NOT TESTED
             if users_missing_avu:
                 for user in users_missing_avu:
                     warns += 1
@@ -279,11 +279,11 @@ def main():
             else:
                 log.info(f"No user seems to be missing AVU \"{avu_name}\"")
 
-        log.debug("Checking not-sufficiently replicated data objects...")
-        missing_repls = missing_replicated_non_sql(session, auto_repl_rescs=AUTO_REPL_RESC, repl_rescs_names=REPL_RESCS)
-        for missing_repl in missing_repls:
-            warns += 1
-            log.warn(f"Data object: {missing_repl} is not sufficiently replicated.")
+#        log.debug("Checking not-sufficiently replicated data objects...")
+#        missing_repls = missing_replicated_non_sql(session, auto_repl_rescs=AUTO_REPL_RESC, repl_rescs_names=REPL_RESCS)
+#        for missing_repl in missing_repls:
+#            warns += 1
+#            log.warn(f"Data object: {missing_repl} is not sufficiently replicated.")
 
         if warns != 0:
             log.warn(f"There were a total of {warns} WARNINGs")
