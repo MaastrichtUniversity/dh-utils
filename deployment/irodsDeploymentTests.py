@@ -19,11 +19,11 @@ def parse_args():
     parser.add_argument("-x", "--exclusions", nargs="+", default="bundleResc, demoResc, rootResc", action='store',
                         required=False, type=str, help="Resources to exclude in resource availability check.")
     parser.add_argument("-f", "--source_file", default=None, action='store',
-                        required=False, type=str, help="Local path to source file.")
+                        required=True, type=str, help="Local path to source file.")
     parser.add_argument("-n", "--name", default=None, action='store',
-                        required=False, type=str, help="Name of file, how it should be stored in iRODS.")
+                        required=True, type=str, help="Name of file, how it should be stored in iRODS.")
     parser.add_argument("-d", "--dest", default=None, action='store',
-                        required=False, type=str, help="Destination path to locally store file from iRODS.")
+                        required=True, type=str, help="Destination path to locally store file from iRODS.")
     parser.add_argument("-o", "--overwrite", required=False, action='store_true', help="Overwrite files if they exist.")
     parser.add_argument("-a", "--archive-file", required=False, action='store_true', help="Archive file to tape.")
 
