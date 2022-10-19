@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 import argparse
+import time
 from irods.session import iRODSSession
 from irods.resource import iRODSResource
 from irods.models import Resource
@@ -17,15 +18,13 @@ def parse_args():
     parser.add_argument("-e", "--env-file", default=None, action='store',
                         required=False, type=str, help="Path to irods environment file containing connection settings.")
     parser.add_argument("-x", "--exclusions", nargs="+", default="bundleResc, demoResc, rootResc", action='store',
-                        required=False, type=str, help="Resources to exclude in resource availability check.")
+                        required=False, type=str, help="Resources to exclude in resource availability check."
+                                                       "This does not exclude these resources for put/get operations!")
     parser.add_argument("-f", "--source_file", default=None, action='store',
                         required=True, type=str, help="Local path to source file.")
     parser.add_argument("-n", "--name", default=None, action='store',
                         required=True, type=str, help="Name of file, how it should be stored in iRODS.")
-    parser.add_argument("-d", "--dest", default=None, action='store',
-                        required=True, type=str, help="Destination path to locally store file from iRODS.")
     parser.add_argument("-o", "--overwrite", required=False, action='store_true', help="Overwrite files if they exist.")
-    parser.add_argument("-a", "--archive-file", required=False, action='store_true', help="Archive file to tape.")
 
     return parser.parse_args()
 
@@ -98,7 +97,7 @@ def irods_session(env_file=None):
 def get_resources(session):
     repl_coor_rescs = session.query(Resource).filter(Resource.type == 'replication')
     repl_coor_rescs_names = [repl_resc[Resource.name] for repl_resc in repl_coor_rescs]
-    log.info(f"Found Replication resource(s): {repl_coor_rescs_names}")
+    log.info(f"Found replication resource(s): {repl_coor_rescs_names}")
 
     return repl_coor_rescs_names
 
@@ -166,32 +165,37 @@ def put_file(session, resources, name, source_file):
 
 
 # Archival of file to tape by replicating the file with destination resource 'arcRescSURF01'.
-def archive_file(session, resources, name, archive_file):
+def replicate_file(session, resources, name):
     path = f"/nlmumc/home/{session.username}"
     file_path = f"{path}/{name}"
-    if archive_file is True:
-        try:
-            for resource in resources:
-                log.info(f"Archiving file '{name}_{resource}' from '{path}/' to 'arcRescSURF01'")
-                session.data_objects.replicate(str(file_path+"_"+resource), resource="arcRescSURF01")
-                log.info(f"Archival to 'arcRescSURF01' successful!")
-        except(
-                exception.DataObjectDoesNotExist,
-                KeyError
-        ):
-            log.error(f"Error during archive operation. Exiting...")
-            sys.exit(1)
+    resc_dictionary = {i: resources[i] for i in range(0, len(resources))}
+    try:
+        for k in range(0, len(resources)):
+            if k == len(resources) - 1:
+                session.data_objects.replicate(str(file_path + "_" + resources[k]), resource=resc_dictionary[0])
+                log.info(f"Replication of '{name}_{resources[k]}' to '{resc_dictionary[0]}' successful!")
+            else:
+                session.data_objects.replicate(str(file_path + "_" + resources[k]), resource=resc_dictionary[k + 1])
+                log.info(f"Replication of '{name}_{resources[k]}' to '{resc_dictionary[k + 1]}' successful!")
+    except(
+            exception.DataObjectDoesNotExist,
+            KeyError
+    ):
+        log.error(f"Error during archive operation. Exiting...")
+        sys.exit(1)
 
 
 # Get operation of file
-def get_file(session, resources, name, dest):
+def get_file(session, resources, name):
     path = f"/nlmumc/home/{session.username}"
     file_path = f"{path}/{name}"
+    dest = f"./"
+    time_stamp = int(time.time())
+    log.info(f"Get operation started. This will retrieve the file for each resource and put it in the current directory.")
     try:
         for resource in resources:
             log.info(f"Getting file '{name}_{resource}' from '{path}/', resource '{resource}")
-            log.info(f"Destination: '{dest}'")
-            session.data_objects.get(str(file_path+"_"+resource), dest)
+            session.data_objects.get(file_path+"_"+resource, dest+name+"_"+resource+"_"+str(time_stamp))
             log.info(f"Get operation successful!")
     except (
             exception.OVERWRITE_WITHOUT_FORCE_FLAG,
@@ -220,24 +224,22 @@ def remove_file(session, resources, name):
 
 def main():
     args = parse_args()
-    print(args)
     with irods_session(args.env_file) as session:
         log.info("START: checking resource availability...")
         check_resources(session, args.exclusions)
         print()
-
         resources = get_resources(session)
         print()
-
-        log.info("START: putting, getting and removing file...")
+        log.info("START: putting, replicating, getting and removing file...")
         check_path(session)
         check_file(session, resources, args.name, args.overwrite)
         put_file(session, resources, args.name, args.source_file)
-        archive_file(session, resources, args.name, args.archive_file)
-        if get_file(session, resources, args.name, args.dest) == 1:
-            remove_file(session, resources, args.name)
-        else:
-            remove_file(session, resources, args.name)
+        print()
+        replicate_file(session, resources, args.name)
+        print()
+        get_file(session, resources, args.name)
+        print()
+        remove_file(session, resources, args.name)
 
 
 if __name__ == "__main__":
