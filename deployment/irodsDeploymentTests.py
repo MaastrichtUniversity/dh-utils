@@ -238,6 +238,7 @@ def get_file(session, resources, name):
         log.error(f"Get operation failed! Make sure the filename does not exist at the destination.")
         return 1
 
+
 # Removal of all files based on filename, with unlink. This also removes all replicates.
 def remove_file(session, resources, name):
     path = f"/nlmumc/home/{session.username}"
