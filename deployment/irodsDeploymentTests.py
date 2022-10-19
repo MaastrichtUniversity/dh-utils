@@ -3,6 +3,9 @@ import sys
 import logging
 import argparse
 import time
+import re
+import hashlib
+import base64
 from irods.session import iRODSSession
 from irods.resource import iRODSResource
 from irods.models import Resource
@@ -137,7 +140,8 @@ def check_file(session, resources, name, overwrite):
     file_path = f"{path}/{name}"
     for resource in resources:
         if session.data_objects.exists(str(file_path+"_"+resource)) and overwrite is False:
-            yes_no = query_yes_no(f"The filename '{name}_{resource}' already exists at {path}/, resource {resource}. Do you want to overwrite the file?")
+            yes_no = query_yes_no(f"The filename '{name}_{resource}' already exists at {path}/, resource {resource}. "
+                                  f"Do you want to overwrite the file?")
             if yes_no == "no":
                 log.info(f"Exiting... Please retry using a different filename.")
                 sys.exit(1)
@@ -197,13 +201,42 @@ def get_file(session, resources, name):
             log.info(f"Getting file '{name}_{resource}' from '{path}/', resource '{resource}")
             session.data_objects.get(file_path+"_"+resource, dest+name+"_"+resource+"_"+str(time_stamp))
             log.info(f"Get operation successful!")
+            print()
+
+            log.info(f"Checking checksums...")
+            # Retrieve cheksums from iRODS objects
+            chksum = session.data_objects.chksum(str(file_path+"_"+resource))
+            chksum_stripped = re.sub('sha2:', '', chksum)
+
+            # Read the file in chunks otherwise 'large' files will use up a lot of memory
+            # Calculate digest of file (bytes object) then encode to base64
+            # Based on 'sha256sum ${FILENAME} | xxd -r -p | base64' \
+            # Which is command line way of recreating cheksums as in iRODS
+            sha2 = hashlib.sha256()
+            BUF_SIZE = 65536  # Reads file in chunks of 64Kb. Arbitrary
+
+            with open(str(dest+name+"_"+resource+"_"+str(time_stamp)), 'rb') as f:
+                while True:
+                    data = f.read(BUF_SIZE)
+                    if not data:
+                        break
+                    sha2.update(data)
+            chksum_local = sha2.digest()
+            b64chksum = re.sub('[b\']', '', str(base64.b64encode(chksum_local)))
+
+            if chksum_stripped == b64chksum:
+                log.info(f"Checksums match!")
+                print()
+            else:
+                log.error(f"Checksums do not match. Please investigate.")
+                sys.exit(1)
+
     except (
             exception.OVERWRITE_WITHOUT_FORCE_FLAG,
             KeyError,
     ):
         log.error(f"Get operation failed! Make sure the filename does not exist at the destination.")
         return 1
-
 
 # Removal of all files based on filename, with unlink. This also removes all replicates.
 def remove_file(session, resources, name):
