@@ -164,7 +164,8 @@ def put_file(session, resources, name, source_file):
             exception.UNIX_FILE_CREATE_ERR,
             KeyError
     ):
-        log.error(f"Error: during put operation. Exiting...")
+        log.error(f"Error during put operation.")
+        log.error(f"Exiting...")
         sys.exit(1)
 
 
@@ -185,7 +186,8 @@ def replicate_file(session, resources, name):
             exception.DataObjectDoesNotExist,
             KeyError
     ):
-        log.error(f"Error during archive operation. Exiting...")
+        log.error(f"Error during archive operation.")
+        log.error(f"Exiting...")
         sys.exit(1)
 
 
@@ -229,6 +231,7 @@ def get_file(session, resources, name):
                 print()
             else:
                 log.error(f"Checksums do not match. Please investigate.")
+                log.error(f"Exiting...")
                 sys.exit(1)
 
     except (
@@ -252,7 +255,8 @@ def remove_file(session, resources, name):
             exception.DataObjectDoesNotExist,
             KeyError
     ):
-        log.error(f"Error: during remove operation. Exiting...")
+        log.error(f"Error: during remove operation.")
+        log.error(f"Exiting...")
         sys.exit(1)
 
 
