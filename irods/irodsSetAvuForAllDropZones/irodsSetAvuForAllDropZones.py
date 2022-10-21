@@ -2,7 +2,7 @@ import argparse
 import subprocess
 
 
-def set_avu_to_mounted_dropzone(commit, attribute, value):
+def set_avu_to_mounted_dropzones(commit, attribute, value):
     run_iquest = "iquest \"%s\" \"SELECT COLL_NAME WHERE COLL_PARENT_NAME = '/nlmumc/ingest/zones'\""
     dropzones = subprocess.check_output(run_iquest, shell=True).strip()
 
@@ -19,19 +19,21 @@ def set_avu_to_mounted_dropzone(commit, attribute, value):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Set the attribute value to all (mounted) dropzone")
+    parser = argparse.ArgumentParser(description="Set the attribute value to all (mounted) drop-zones")
     parser.add_argument("-a", "--attribute", type=str, help="The attribute to set", required=True)
     parser.add_argument("-v", "--value", type=str, help="The value to set", required=True)
-    parser.add_argument("-c", "--commit", action="store_true", help="Commit to upload the converted file")
+    parser.add_argument("-m", "--mounted", action="store_true", help="Only sets the AVU for mounted drop-zones")
+    parser.add_argument("-c", "--commit", action="store_true", help="Commit to the AVU changes")
     args = parser.parse_args()
 
     if args.commit:
-        print ("Running in commit--mode")
+        print ("Running in COMMIT mode")
     else:
-        print ("Running in dry--mode")
+        print ("Running in DRY-RUN")
 
     # TODO add set_avu_to_direct_dropzone * set_avu_to_alldropzones
-    set_avu_to_mounted_dropzone(args.commit, args.attribute, args.value)
+    if args.mounted:
+        set_avu_to_mounted_dropzones(args.commit, args.attribute, args.value)
 
 
 if __name__ == "__main__":
