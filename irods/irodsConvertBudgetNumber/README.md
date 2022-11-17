@@ -4,7 +4,7 @@
 * **Description**: Loop over all existing projects and modify the budget number to the new format
 * **Developer:** Dean Linssen, DataHub Maastricht University
 * **License:** ?
-* **Depends on:** python-irodsclient >=1.1.3
+* **Depends on:** python-irodsclient >=1.1.5
 
 # Before usage
 1. Clone this repository
@@ -16,7 +16,7 @@ sudo apt-get install python3-virtualenv
 python3 -m virtualenv --python=python3 venv3
 source ./venv3/bin/activate
 
-pip install python-irodsclient==1.1.3
+pip install python-irodsclient==1.1.5
 pip install git+https://github.com/MaastrichtUniversity/dh-python-irods-utils.git@v1.0.5#egg=dh-python-irods-utils
 
 # To exit the venv
