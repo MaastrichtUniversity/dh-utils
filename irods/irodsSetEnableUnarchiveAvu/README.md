@@ -4,7 +4,7 @@
 * **Description**: Loop over all existing projects set the enableUnarchive AVU to a default value (the value of EnableArchive if exists, 'false' if it does not)
 * **Developer:** Dean Linssen, DataHub Maastricht University
 * **License:** ?
-* **Depends on:** python-irodsclient >=1.1.3
+* **Depends on:** python-irodsclient >=1.1.5
 
 ## How to install the dependencies
 ```
@@ -12,7 +12,7 @@ sudo apt-get install python3-virtualenv
 python3 -m virtualenv --python=python3 venv3
 source ./venv3/bin/activate
 
-pip install python-irodsclient==1.1.3
+pip install python-irodsclient==1.1.5
 
 # To exit the venv
 # deactivate
