@@ -160,7 +160,7 @@ function create_checksums {
   LOG $DBG " - opening collection"
   if [[ -n ${COLL_NAME} ]];then
     if $COMMIT; then
-      irule -F /rules/projectCollection/openProjectCollection.r "*project='${PROJ_NAME}'" "*projectCollection='${COLL_NAME}'" "*user='rods'" "*rights='own'"
+      irule -F /rules/native_irods_ruleset/projectCollection/openProjectCollection.r "*project='${PROJ_NAME}'" "*projectCollection='${COLL_NAME}'" "*user='rods'" "*rights='own'"
     fi
   else
     # open all collections for this project
@@ -168,7 +168,7 @@ function create_checksums {
       SUBCOLL_NAME="${SUBCOLL_NAME##*/}"
       LOG $DBG "   - ${SUBCOLL_NAME}"
       if $COMMIT; then
-        irule -F /rules/projectCollection/openProjectCollection.r "*project='${PROJ_NAME}'" "*projectCollection='${SUBCOLL_NAME}'" "*user='rods'" "*rights='own'"
+        irule -F /rules/native_irods_ruleset/projectCollection/openProjectCollection.r "*project='${PROJ_NAME}'" "*projectCollection='${SUBCOLL_NAME}'" "*user='rods'" "*rights='own'"
       fi
     done
   fi
@@ -187,7 +187,7 @@ function create_checksums {
   LOG $DBG " - closing collection"
   if [[ -n ${COLL_NAME} ]]; then
     if $COMMIT; then
-      irule -F /rules/projectCollection/closeProjectCollection.r "*project='${PROJ_NAME}'" "*projectCollection='${COLL_NAME}'"
+      irule -F /rules/native_irods_ruleset/projectCollection/closeProjectCollection.r "*project='${PROJ_NAME}'" "*projectCollection='${COLL_NAME}'"
     fi
   else
     # close all collections for this project
@@ -195,7 +195,7 @@ function create_checksums {
       SUBCOLL_NAME="${SUBCOLL_NAME##*/}"
       LOG $DBG "   - ${SUBCOLL_NAME}"
       if $COMMIT; then
-        irule -F /rules/projectCollection/closeProjectCollection.r "*project='${PROJ_NAME}'" "*projectCollection='${SUBCOLL_NAME}'"
+        irule -F /rules/native_irods_ruleset/projectCollection/closeProjectCollection.r "*project='${PROJ_NAME}'" "*projectCollection='${SUBCOLL_NAME}'"
       fi
     done
   fi
@@ -614,22 +614,22 @@ if $COMMIT; then
   LOG $INF "Update project cost"
   if [[ -n ${COLL_NAME} ]];then
     if $COMMIT; then
-      COSTS_OLD=$(irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'")
-      irule -F /rules/misc/setCollectionSize.r "*project='${PROJ_NAME}'" "*projectCollection='${COLL_NAME}'" "*openPC='true'" "*closePC='true'"
-      COSTS_NEW=$(irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'")
+      COSTS_OLD=$(irule -F /rules/native_irods_ruleset/projects/getProjectCost.r "*project='${PROJ_NAME}'")
+      irule -F /rules/native_irods_ruleset/misc/setCollectionSize.r "*project='${PROJ_NAME}'" "*projectCollection='${COLL_NAME}'" "*openPC='true'" "*closePC='true'"
+      COSTS_NEW=$(irule -F /rules/native_irods_ruleset/projects/getProjectCost.r "*project='${PROJ_NAME}'")
       LOG $INF "Costs for project ${PROJ_NAME} are decreased from ${COSTS_OLD} to ${COSTS_NEW}"
     fi
   else
     # Update collections costs for this project
-    COSTS_OLD=$(irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'")
+    COSTS_OLD=$(irule -F /rules/native_irods_ruleset/projects/getProjectCost.r "*project='${PROJ_NAME}'")
     if $COMMIT; then
       for SUBCOLL_NAME in $(ils $COLL | grep '  C- ' | sed 's/  C- //g'); do
         SUBCOLL_NAME="${SUBCOLL_NAME##*/}"
         LOG $DBG "   - ${SUBCOLL_NAME}"
-        irule -F /rules/misc/setCollectionSize.r "*project='${PROJ_NAME}'" "*projectCollection='${SUBCOLL_NAME}'" "*openPC='true'" "*closePC='true'"
+        irule -F /rules/native_irods_ruleset/misc/setCollectionSize.r "*project='${PROJ_NAME}'" "*projectCollection='${SUBCOLL_NAME}'" "*openPC='true'" "*closePC='true'"
       done
     fi
-    COSTS_NEW=$(irule -F /rules/projects/getProjectCost.r "*project='${PROJ_NAME}'")
+    COSTS_NEW=$(irule -F /rules/native_irods_ruleset/projects/getProjectCost.r "*project='${PROJ_NAME}'")
     LOG $INF "Costs for project ${PROJ_NAME} are decreased from ${COSTS_OLD} to ${COSTS_NEW}"
   fi
 
