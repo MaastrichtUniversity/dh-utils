@@ -23,7 +23,7 @@ pip install python-irodsclient==1.1.5
 ```
 source ./venv3/bin/activate
 
-python3 sset_latest_project_collection_number.py [-h] [-c]
+python3 set_latest_project_collection_number.py [-h] [-c]
 
 optional arguments:
   -h, --help            show this help message and exit
