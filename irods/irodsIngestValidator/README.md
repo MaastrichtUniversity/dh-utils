@@ -22,4 +22,3 @@ optional arguments:
  ## TODOs
  
  * Properly print the errors into a user-defined output file
- * Show progress in the active run

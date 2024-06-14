@@ -6,6 +6,10 @@ import sys
 import json
 import subprocess
 
+COUNT = 0
+TOTAL = 0
+ERRORS = 0
+
 def parse_arguments():
     parser = argparse.ArgumentParser(
         description=__doc__,
@@ -44,6 +48,7 @@ def get_full_path(path, item):
             get_full_path(new_path, child)
 
 def verify_contents(destination_full_path, file_name):
+    write_progress()
     run_ils = f"ils -l \"{destination_full_path}\""
     try:
         output = subprocess.check_output(run_ils.encode('utf-8'), shell=True).decode("utf-8")
@@ -55,21 +60,43 @@ def verify_contents(destination_full_path, file_name):
         add_to_errors(destination_full_path, str(e))
 
 def add_to_errors(destination_full_path, error_message):
+    global ERRORS
+    ERRORS += 1
     with open("/tmp/errors_file","a+") as f:
         f.write(f"Error occurred for {destination_full_path} \n")
         f.write(f"{error_message} \n")
 
+def write_progress():
+    global COUNT
+    COUNT += 1
+    percentage = (COUNT / TOTAL) * 100
+    print(f"{COUNT} / {TOTAL} ({round(percentage, 2)}%)", end='\r')
+
 def main():
     config = parse_arguments()
-
-    if not config.file:
-        parser.print_usage()
-        return 1
-
     contents = json.load(config.file)
+
+    with open("/tmp/errors_file","a+") as f:
+        f.write(f"Starting validation of {contents['type']} ingest {contents['token']} by {contents['creator']}\n")
+        f.write("------------------------\n")
+
+    global TOTAL
+    TOTAL = contents["file_count"]
+
     for item in contents["file_folder_structure"]["children"]:
         base_path = f"/nlmumc/projects/{contents['project']}/{contents['collection']}"
         get_full_path(base_path, item)
+    
+    print(f"Finished validating {contents['type']} ingest {contents['token']} by {contents['creator']}")
+    print("Results:")
+    print("------------------------")
+    print(f"Total: {TOTAL}")
+    print(f"Successful: {TOTAL - ERRORS}")
+    print(f"Errors: {ERRORS} ({round(((COUNT / TOTAL) * 100), 2)})%")
+
+    with open("/tmp/errors_file","a+") as f:
+        f.write(f"Finished validation of {contents['type']} ingest {contents['token']} by {contents['creator']}\n")
+        f.write("------------------------\n")
 
     return 0
 
