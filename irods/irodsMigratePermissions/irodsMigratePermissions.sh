@@ -124,15 +124,15 @@ do
          oldUserName=${USER_ID_MAP[$userId]}
          newUserName=${USER_NAME_MAP[$oldUserName]}
          echo "  - $newUserName $accessName"
-         permissionsString+="$newUserName:$accessName $oldUserName:null "
+         permissionsString+="$newUserName:$accessName $oldUserName:remove "
       else
          :
       fi
    done< <(iquest "select COLL_NAME, COLL_ACCESS_USER_ID, COLL_ACCESS_NAME where COLL_NAME = '$project'" )
 
     if [[ "$permissionsString" != "" ]]; then
-        [[ $DRY_RUN == "false" ]] && irule "changeProjectPermissions(*project, '$permissionsString')" *project="$projectName" ruleExecOut
-        echo "  - irule \"changeProjectPermissions(*project, '$permissionsString')\" *project=\"$projectName\" ruleExecOut"
+        [[ $DRY_RUN == "false" ]] && irule -r irods_rule_engine_plugin-irods_rule_language-instance "changeProjectPermissions('$projectName', '$permissionsString')" null ruleExecOut
+        echo "  - irule -r irods_rule_engine_plugin-irods_rule_language-instance \"changeProjectPermissions('*project', '$permissionsString')\" null ruleExecOut"
     else
         echo "Skipping project \"$projectName\" because there is nothing to migrate"
     fi
