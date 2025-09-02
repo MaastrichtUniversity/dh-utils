@@ -1,8 +1,8 @@
 # irodsSetEnableUnarchiveAvu
 
-* **Name:** irodsSetEnableUnarchiveAvu
-* **Description**: Loop over all existing projects set the enableUnarchive AVU to a default value (the value of EnableArchive if exists, 'false' if it does not)
-* **Developer:** Dean Linssen, DataHub Maastricht University
+* **Name:** irodsSetLatestProjectCollectionNumber
+* **Description**: Loop over all existing projects set the latestProjectCollectionNumber AVU to a correct value (based on the latest collection)
+* **Developer:** Daniel Theunissens, DataHub Maastricht University
 * **License:** ?
 * **Depends on:** python-irodsclient >=1.1.5
 
@@ -23,9 +23,9 @@ pip install python-irodsclient==1.1.5
 ```
 source ./venv3/bin/activate
 
-python3 set_enable_unarchive_avu.py [-h] [-c]
+python3 set_latest_project_collection_number.py [-h] [-c]
 
 optional arguments:
   -h, --help            show this help message and exit
-  -c, --commit          commit to actually modify the budget number
+  -c, --commit          commit to actually modify the latestProjectCollectionNumber
 ```
