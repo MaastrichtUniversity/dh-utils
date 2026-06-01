@@ -258,7 +258,7 @@ def get_file(session, resources, name):
                     if not data:
                         break
                     sha2.update(data)
-            b64chksum = re.sub('[b\']', '', str(base64.b64encode(sha2.digest())))
+            b64chksum = base64.b64encode(sha2.digest()).decode('utf-8')
 
             if chksum_stripped == b64chksum:
                 log.info(f"Checksum for '{name}_{resource}' matches!")
