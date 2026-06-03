@@ -42,6 +42,20 @@ def normalize_fieldnames(reader):
         reader.fieldnames = [normalize(h) for h in reader.fieldnames]
 
 
+def get_patnr_fieldname(fieldnames):
+    """
+    Return the first supported patient number column name.
+    """
+    if not fieldnames:
+        return None
+
+    for candidate in ('Patnr', 'PAT_ID'):
+        if candidate in fieldnames:
+            return candidate
+
+    return None
+
+
 def load_bsns(file_path):
     bsns = []
 
@@ -77,7 +91,9 @@ def collect_patnrs(path_pattern):
             if not reader.fieldnames:
                 continue
 
-            if 'Patnr' not in reader.fieldnames:
+            patnr_fieldname = get_patnr_fieldname(reader.fieldnames)
+
+            if not patnr_fieldname:
                 print(f"Skipping {filename}: headers={reader.fieldnames}")
                 continue
 
@@ -85,7 +101,7 @@ def collect_patnrs(path_pattern):
 
             for row_number, row in enumerate(reader, start=2):
 
-                patnr = normalize(row.get('Patnr'))
+                patnr = normalize(row.get(patnr_fieldname))
 
                 if patnr:
                     seen_in_file.add(patnr)
@@ -117,13 +133,15 @@ def write_mapped_files(path_pattern, mapping):
             if not reader.fieldnames:
                 continue
 
-            if 'Patnr' not in reader.fieldnames:
-                print(f"Skipping {filename}: no Patnr column")
+            patnr_fieldname = get_patnr_fieldname(reader.fieldnames)
+
+            if not patnr_fieldname:
+                print(f"Skipping {filename}: no Patnr/PAT_ID column")
                 continue
 
             # Rename Patnr column to BSN
             new_fieldnames = [
-                'BSN' if f == 'Patnr' else f
+                'BSN' if f in ('Patnr', 'PAT_ID') else f
                 for f in reader.fieldnames
             ]
 
@@ -137,13 +155,13 @@ def write_mapped_files(path_pattern, mapping):
 
             for row_number, row in enumerate(reader, start=2):
 
-                original_patnr = row.get('Patnr')
+                original_patnr = row.get(patnr_fieldname)
                 normalized_patnr = normalize(original_patnr)
 
                 if normalized_patnr:
 
                     if normalized_patnr in mapping:
-                        row['Patnr'] = mapping[normalized_patnr]
+                        row[patnr_fieldname] = mapping[normalized_patnr]
                     else:
                         print(
                             f"WARNING: No mapping found in {filename} "
@@ -158,7 +176,7 @@ def write_mapped_files(path_pattern, mapping):
                 for key, value in row.items():
                     normalized_key = normalize(key)
 
-                    if normalized_key == 'Patnr':
+                    if normalized_key == patnr_fieldname:
                         output_row['BSN'] = value
                     else:
                         output_row[normalized_key] = value
