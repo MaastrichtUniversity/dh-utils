@@ -4,10 +4,13 @@ import csv
 import glob
 import sys
 import json
+from io import StringIO
 from pathlib import Path
 from collections import defaultdict
 
 MAPPING_FILE = "patnr_bsn_mapping.json"
+BSN_LENGTH = 9
+CSV_ENCODINGS = ('utf-8-sig', 'cp1252', 'latin-1')
 
 
 def normalize(value):
@@ -56,29 +59,41 @@ def get_patnr_fieldname(fieldnames):
     return None
 
 
-def load_bsns(file_path):
-    bsns = []
+def read_csv_text(file_path):
+    for encoding in CSV_ENCODINGS:
+        try:
+            with open(file_path, newline='', encoding=encoding) as file:
+                return file.read()
+        except UnicodeDecodeError:
+            continue
 
-    # Try UTF-8 with error handling, fallback to latin-1
-    try:
-        with open(file_path, newline='', encoding='utf-8-sig') as f:
-            reader = csv.reader(f, delimiter=';')
-            for row in reader:
-                if len(row) < 2:
-                    continue
-                bsn = normalize(row[1])
-                if bsn:
-                    bsns.append(bsn)
-    except UnicodeDecodeError:
-        # Fallback to latin-1, which can decode any byte sequence
-        with open(file_path, newline='', encoding='latin-1') as f:
-            reader = csv.reader(f, delimiter=';')
-            for row in reader:
-                if len(row) < 2:
-                    continue
-                bsn = normalize(row[1])
-                if bsn:
-                    bsns.append(bsn)
+    raise ValueError(f"Unable to decode CSV file: {file_path}")
+
+
+def load_bsns(file_path):
+    rows = list(csv.reader(StringIO(read_csv_text(file_path), newline=''),
+                           delimiter=';'))
+
+    bsns = []
+    for line_number, row in enumerate(rows, start=1):
+        if len(row) < 2:
+            continue
+
+        bsn = normalize(row[1])
+        if not bsn:
+            continue
+
+        if not (bsn.isascii() and bsn.isdigit() and len(bsn) == BSN_LENGTH):
+            raise ValueError(
+                f"Invalid BSN in {file_path} line {line_number}: {bsn!r}. "
+                "Expected a semicolon-delimited fake BSN file with a "
+                "nine-digit BSN in column 2."
+            )
+
+        bsns.append(bsn)
+
+    if not bsns:
+        raise ValueError(f"No BSNs found in {file_path}")
 
     return bsns
 
@@ -92,9 +107,8 @@ def collect_patnrs(path_pattern):
         if filename.endswith("_bsn.csv"):
             continue
 
-        with open(filename, newline='', encoding='utf-8-sig') as f:
-
-            reader = csv.DictReader(f, delimiter=';')
+        with StringIO(read_csv_text(filename), newline='') as file:
+            reader = csv.DictReader(file, delimiter=';')
             normalize_fieldnames(reader)
 
             if not reader.fieldnames:
@@ -133,8 +147,10 @@ def write_mapped_files(path_pattern, mapping):
         input_path = Path(filename)
         output_path = input_path.with_name(input_path.stem + "_bsn.csv")
 
-        with open(input_path, newline='', encoding='utf-8-sig') as infile, \
-             open(output_path, 'w', newline='', encoding='utf-8') as outfile:
+        with (
+            StringIO(read_csv_text(input_path), newline='') as infile,
+            open(output_path, 'w', newline='', encoding='utf-8') as outfile,
+        ):
 
             reader = csv.DictReader(infile, delimiter=';')
             normalize_fieldnames(reader)
@@ -197,12 +213,14 @@ def write_mapped_files(path_pattern, mapping):
 
 def main():
 
-    if len(sys.argv) < 3:
+    arguments = [argument for argument in sys.argv[1:] if argument != "--commit"]
+
+    if len(arguments) != 2:
         print("Usage: script.py '<csv_pattern>' <fake_bsns.csv> [--commit]")
+        print("Quote <csv_pattern> so the shell does not expand it.")
         sys.exit(1)
 
-    csv_pattern = sys.argv[1]
-    bsn_file = sys.argv[2]
+    csv_pattern, bsn_file = arguments
     commit = "--commit" in sys.argv
 
     # Load existing mapping
