@@ -59,17 +59,26 @@ def get_patnr_fieldname(fieldnames):
 def load_bsns(file_path):
     bsns = []
 
-    with open(file_path, newline='', encoding='utf-8-sig') as f:
-        reader = csv.reader(f, delimiter=';')
-
-        for row in reader:
-            if len(row) < 2:
-                continue
-
-            bsn = normalize(row[1])
-
-            if bsn:
-                bsns.append(bsn)
+    # Try UTF-8 with error handling, fallback to latin-1
+    try:
+        with open(file_path, newline='', encoding='utf-8-sig') as f:
+            reader = csv.reader(f, delimiter=';')
+            for row in reader:
+                if len(row) < 2:
+                    continue
+                bsn = normalize(row[1])
+                if bsn:
+                    bsns.append(bsn)
+    except UnicodeDecodeError:
+        # Fallback to latin-1, which can decode any byte sequence
+        with open(file_path, newline='', encoding='latin-1') as f:
+            reader = csv.reader(f, delimiter=';')
+            for row in reader:
+                if len(row) < 2:
+                    continue
+                bsn = normalize(row[1])
+                if bsn:
+                    bsns.append(bsn)
 
     return bsns
 
