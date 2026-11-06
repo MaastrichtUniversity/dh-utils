@@ -13,3 +13,11 @@ testing/*/output/*
 venv
 venv3
 myapp082919101823.log
+
+# Python bytecode and local virtual environment
+__pycache__/
+*.py[cod]
+/irods/irodsDropzoneValidator/datahub/
+
+# Local budget conversion data
+/irods/irodsConvertBudgetNumber/output_full.json
